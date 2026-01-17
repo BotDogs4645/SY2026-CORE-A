@@ -78,7 +78,7 @@ public class Vision extends SubsystemBase {
       // Add tag poses
       for (int tagId : inputs[cameraIndex].tagIds) {
         var tagPose = aprilTagLayout.getTagPose(tagId);
-          tagPose.ifPresent(tagPoses::add);
+        tagPose.ifPresent(tagPoses::add);
       }
 
       // Loop over pose observations
@@ -162,8 +162,8 @@ public class Vision extends SubsystemBase {
   @FunctionalInterface
   public interface VisionConsumer {
     void accept(
-            Pose2d visionRobotPoseMeters,
-            double timestampSeconds,
-            Matrix<N3, N1> visionMeasurementStdDevs);
+        Pose2d visionRobotPoseMeters,
+        double timestampSeconds,
+        Matrix<N3, N1> visionMeasurementStdDevs);
   }
 }

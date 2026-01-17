@@ -14,6 +14,7 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
   private static VisionSystemSim visionSim;
 
   private final Supplier<Pose2d> poseSupplier;
+
   @SuppressWarnings("FieldCanBeLocal") // keep as field for consistency with other hardware objects
   private final PhotonCameraSim cameraSim;
 

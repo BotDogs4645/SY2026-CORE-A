@@ -79,7 +79,8 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
-  private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
+  private final SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
   private final SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
@@ -122,7 +123,8 @@ public class Drive extends SubsystemBase {
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
-        (activePath) -> Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0])));
+        (activePath) ->
+            Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0])));
     PathPlannerLogging.setLogTargetPoseCallback(
         (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
 

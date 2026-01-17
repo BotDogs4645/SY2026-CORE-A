@@ -99,8 +99,8 @@ public class PhoenixOdometryThread extends Thread {
 
   @Override
   public void run() {
-      //TODO: figure out if there is a better way to do this
-      while (true) {
+    // TODO: figure out if there is a better way to do this
+    while (true) {
       // Wait for updates from all signals
       signalsLock.lock();
       try {

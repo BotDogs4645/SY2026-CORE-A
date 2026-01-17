@@ -44,6 +44,7 @@ public class ModuleIOTalonFX implements ModuleIO {
   // Hardware objects
   private final TalonFX driveTalon;
   private final TalonFX turnTalon;
+
   @SuppressWarnings("FieldCanBeLocal") // keep as field for consistency with other hardware objects
   private final CANcoder cancoder;
 
@@ -206,13 +207,9 @@ public class ModuleIOTalonFX implements ModuleIO {
     inputs.odometryTimestamps =
         timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryDrivePositionsRad =
-        drivePositionQueue.stream()
-            .mapToDouble(Units::rotationsToRadians)
-            .toArray();
+        drivePositionQueue.stream().mapToDouble(Units::rotationsToRadians).toArray();
     inputs.odometryTurnPositions =
-        turnPositionQueue.stream()
-            .map(Rotation2d::fromRotations)
-            .toArray(Rotation2d[]::new);
+        turnPositionQueue.stream().map(Rotation2d::fromRotations).toArray(Rotation2d[]::new);
     timestampQueue.clear();
     drivePositionQueue.clear();
     turnPositionQueue.clear();
