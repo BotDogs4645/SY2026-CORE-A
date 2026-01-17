@@ -30,7 +30,7 @@ public class PhoenixOdometryThread extends Thread {
   private final List<Queue<Double>> genericQueues = new ArrayList<>();
   private final List<Queue<Double>> timestampQueues = new ArrayList<>();
 
-  private static boolean isCANFD = TunerConstants.kCANBus.isNetworkFD();
+  private static final boolean isCANFD = TunerConstants.kCANBus.isNetworkFD();
   private static PhoenixOdometryThread instance = null;
 
   public static PhoenixOdometryThread getInstance() {
@@ -47,7 +47,7 @@ public class PhoenixOdometryThread extends Thread {
 
   @Override
   public void start() {
-    if (timestampQueues.size() > 0) {
+    if (!timestampQueues.isEmpty()) {
       super.start();
     }
   }
@@ -99,7 +99,8 @@ public class PhoenixOdometryThread extends Thread {
 
   @Override
   public void run() {
-    while (true) {
+      //TODO: figure out if there is a better way to do this
+      while (true) {
       // Wait for updates from all signals
       signalsLock.lock();
       try {

@@ -33,6 +33,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+
+  @SuppressWarnings({"unused", "FieldCanBeLocal"}) // Subsystem runs via CommandScheduler and communicates via callback
   private final Vision vision;
 
   // Controller
