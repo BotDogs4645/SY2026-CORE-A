@@ -98,7 +98,8 @@ public class PhoenixOdometryThread extends Thread {
   }
 
   @Override
-  @SuppressWarnings("InfiniteLoopStatement") // daemon thread runs for robot lifetime; sleeps each iteration
+  @SuppressWarnings(
+      "InfiniteLoopStatement") // daemon thread runs for robot lifetime; sleeps each iteration
   public void run() {
     while (true) {
       // Wait for updates from all signals
