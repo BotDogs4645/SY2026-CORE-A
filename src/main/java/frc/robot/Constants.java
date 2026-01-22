@@ -1,5 +1,7 @@
 package frc.robot;
 
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -14,7 +16,13 @@ public final class Constants {
   // DO NOT FORGET
   private static RobotType robotType = RobotType.COMPBOT;
   private static WheelType wheelType = WheelType.BILLET;
+  private static LoggedDashboardChooser<WheelType> wheelChooser = new LoggedDashboardChooser<>("Wheel Choices");
   // da da da da da da da da da da da
+
+  public static void instantiateChoosers() {
+      wheelChooser.addOption("Spike Grip", WheelType.SPIKE_GRIP);
+      wheelChooser.addOption("Billet", WheelType.BILLET);
+  }
 
   @SuppressWarnings("resource")
   public static RobotType getRobot() {
@@ -27,7 +35,7 @@ public final class Constants {
   }
 
   public static WheelType getWheels() {
-    return wheelType;
+    return wheelChooser.get();
   }
 
   public static Mode getMode() {
