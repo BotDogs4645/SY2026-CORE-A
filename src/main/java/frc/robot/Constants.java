@@ -16,6 +16,10 @@ public final class Constants {
   private static WheelType wheelType = WheelType.BILLET;
   // da da da da da da da da da da da
 
+  // endgame alert times
+  public static final double ENDGAME_ALERT_1_TIME = 30.0;
+  public static final double ENDGAME_ALERT_2_TIME = 15.0;
+
   @SuppressWarnings("resource")
   public static RobotType getRobot() {
     if (RobotBase.isReal() && robotType == RobotType.SIMBOT) {
