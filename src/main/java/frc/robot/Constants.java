@@ -1,15 +1,41 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
- * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
- * on a roboRIO. Change the value of "simMode" to switch between "sim" (physics sim) and "replay"
- * (log replay from a file).
+ * This class defines the runtime mode used by AdvantageKit and robot/wheel configuration. Change
+ * robotType and wheelType to switch between different hardware configurations.
  */
 public final class Constants {
-  public static final Mode simMode = Mode.SIM;
-  public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+  // da da da da da da da da da da da
+  // CHANGE THESE TO THE CORRECT VALUE FOR THE ROBOT
+  // DO NOT FORGET
+  private static RobotType robotType = RobotType.COMPBOT;
+  private static WheelType wheelType = WheelType.BILLET;
+  // da da da da da da da da da da da
+
+  @SuppressWarnings("resource")
+  public static RobotType getRobot() {
+    if (RobotBase.isReal() && robotType == RobotType.SIMBOT) {
+      new Alert("Invalid robot selected, using competition robot as default.", AlertType.kError)
+          .set(true);
+      robotType = RobotType.COMPBOT;
+    }
+    return robotType;
+  }
+
+  public static WheelType getWheels() {
+    return wheelType;
+  }
+
+  public static Mode getMode() {
+    return switch (robotType) {
+      case DEVBOT, COMPBOT -> RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
+      case SIMBOT -> Mode.SIM;
+    };
+  }
 
   public enum Mode {
     /** Running on a real robot. */
@@ -20,5 +46,16 @@ public final class Constants {
 
     /** Replaying from a log file. */
     REPLAY
+  }
+
+  public enum RobotType {
+    SIMBOT, // Simulation only
+    DEVBOT, // Practice/dev robot
+    COMPBOT // Competition robot
+  }
+
+  public enum WheelType {
+    SPIKE_GRIP, // Spike Grip wheels
+    BILLET // Billet wheels
   }
 }
