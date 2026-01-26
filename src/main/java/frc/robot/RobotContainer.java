@@ -125,6 +125,9 @@ public class RobotContainer {
 
     // Configure alerts (rumble feedback)
     configureAlerts();
+
+    // Configure rumble demos for drive team testing
+    configureRumbleDemos();
   }
 
   /**
@@ -208,5 +211,34 @@ public class RobotContainer {
    */
   public Supplier<Command> getRumbleSupplier() {
     return this::controllerRumbleCommand;
+  }
+
+  /**
+   * configures rumble demo bindings for drive team to test different feedback types. uses D-pad and
+   * Y button. u better not forget to remove this method before competition.
+   */
+  private void configureRumbleDemos() {
+    GenericHID hid = driver.getHID();
+
+    // full intensity both motors
+    driver.povUp().whileTrue(Rumble.rumble(hid, 1.0));
+
+    // 30% intensity both motors
+    driver.povDown().whileTrue(Rumble.rumble(hid, 0.3));
+
+    // full intensity left motor only
+    driver.povLeft().whileTrue(Rumble.rumbleLeft(hid, 1.0));
+
+    // full intensity right motor only
+    driver.povRight().whileTrue(Rumble.rumbleRight(hid, 1.0));
+
+    // triple pulse pattern
+    driver.y().onTrue(Rumble.rumblePattern(hid, 1.0, 0.2, 0.1, 3));
+
+    // left right left right
+    driver
+        .leftBumper()
+        .and(driver.rightBumper())
+        .whileTrue(Rumble.rumbleAlternating(hid, 1.0, 0.15, 10));
   }
 }
