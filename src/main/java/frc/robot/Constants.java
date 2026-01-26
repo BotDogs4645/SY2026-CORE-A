@@ -20,6 +20,10 @@ public final class Constants {
   public static final double ENDGAME_ALERT_1_TIME = 30.0;
   public static final double ENDGAME_ALERT_2_TIME = 15.0;
 
+  // battery monitoring
+  public static final double LOW_BATTERY_VOLTAGE = 11.5;
+  public static final double LOW_BATTERY_DISABLED_TIME = 1.5; // seconds
+
   @SuppressWarnings("resource")
   public static RobotType getRobot() {
     if (RobotBase.isReal() && robotType == RobotType.SIMBOT) {
