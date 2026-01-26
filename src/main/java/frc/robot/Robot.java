@@ -1,7 +1,13 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.leds.Leds;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -18,6 +24,12 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private final RobotContainer robotContainer;
+
+  private final Alert lowBatteryAlert =
+      new Alert("Battery voltage is very low, consider replacing it.", AlertType.kWarning);
+  private final Alert canErrorAlert =
+      new Alert("CAN errors detected, robot is gonna suck.", AlertType.kError);
+  private final Timer disabledTimer = new Timer();
 
   public Robot() {
     // Record metadata
@@ -77,6 +89,24 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
+
+    if (DriverStation.isEnabled()) {
+      disabledTimer.reset();
+    } else {
+      disabledTimer.start();
+    }
+
+    if (RobotController.getBatteryVoltage() <= Constants.LOW_BATTERY_VOLTAGE
+        && disabledTimer.hasElapsed(Constants.LOW_BATTERY_DISABLED_TIME)) {
+      lowBatteryAlert.set(true);
+      Leds.getInstance().lowBatteryAlert = true;
+    } else {
+      lowBatteryAlert.set(false);
+      Leds.getInstance().lowBatteryAlert = false;
+    }
+
+    var canStatus = RobotController.getCANStatus();
+    canErrorAlert.set(canStatus.transmitErrorCount > 0 || canStatus.receiveErrorCount > 0);
 
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);

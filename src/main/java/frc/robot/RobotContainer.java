@@ -19,6 +19,7 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.SwerveConfig;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
@@ -175,24 +176,35 @@ public class RobotContainer {
 
   /** configures endgame alerts and other feedback triggers */
   private void configureAlerts() {
+    // endgame alert #1 - single pulse at 30s
     new Trigger(
             () ->
                 DriverStation.isTeleopEnabled()
                     && DriverStation.getMatchTime() > 0
                     && DriverStation.getMatchTime() <= Constants.ENDGAME_ALERT_1_TIME)
-        .onTrue(controllerRumbleCommand().withTimeout(0.5));
+        .onTrue(
+            Commands.parallel(
+                    controllerRumbleCommand().withTimeout(0.5),
+                    Commands.runOnce(() -> Leds.getInstance().endgameAlert = true))
+                .andThen(Commands.waitSeconds(1.0))
+                .finallyDo(() -> Leds.getInstance().endgameAlert = false));
 
+    // endgame alert #2 - triple pulse at 15s
     new Trigger(
             () ->
                 DriverStation.isTeleopEnabled()
                     && DriverStation.getMatchTime() > 0
                     && DriverStation.getMatchTime() <= Constants.ENDGAME_ALERT_2_TIME)
         .onTrue(
-            controllerRumbleCommand()
-                .withTimeout(0.2)
-                .andThen(Commands.waitSeconds(0.1))
-                .repeatedly()
-                .withTimeout(0.9));
+            Commands.parallel(
+                    controllerRumbleCommand()
+                        .withTimeout(0.2)
+                        .andThen(Commands.waitSeconds(0.1))
+                        .repeatedly()
+                        .withTimeout(0.9),
+                    Commands.runOnce(() -> Leds.getInstance().endgameAlert = true))
+                .andThen(Commands.waitSeconds(1.5))
+                .finallyDo(() -> Leds.getInstance().endgameAlert = false));
   }
 
   /**
