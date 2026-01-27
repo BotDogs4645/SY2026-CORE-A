@@ -19,7 +19,7 @@ public final class Constants {
   // da da da da da da da da da da da
   // tuning mode - set to false for competition
   public static final boolean tuningMode = true;
-  public static final boolean disableHAL = false; //todo soon
+  public static final boolean disableHAL = false; // todo soon
   // da da da da da da da da da da da
 
   // endgame alert times
