@@ -235,8 +235,8 @@ public class RobotContainer {
     // full intensity both motors
     driver.povUp().whileTrue(Rumble.rumble(hid, 1.0));
 
-    // 30% intensity both motors
-    driver.povDown().whileTrue(Rumble.rumble(hid, 0.3));
+    // 40% intensity both motors
+    driver.povDown().whileTrue(Rumble.rumble(hid, 0.4));
 
     // full intensity left motor only
     driver.povLeft().whileTrue(Rumble.rumbleLeft(hid, 1.0));
@@ -245,12 +245,12 @@ public class RobotContainer {
     driver.povRight().whileTrue(Rumble.rumbleRight(hid, 1.0));
 
     // triple pulse pattern
-    driver.y().onTrue(Rumble.rumblePattern(hid, 1.0, 0.2, 0.1, 3));
+    driver.y().onTrue(Rumble.rumblePattern(hid, 1.0, 0.25, 0.15, 3));
 
     // left right left right
     driver
         .leftBumper()
         .and(driver.rightBumper())
-        .whileTrue(Rumble.rumbleAlternating(hid, 1.0, 0.15, 10));
+        .whileTrue(Rumble.rumbleAlternating(hid, 1.0, 0.30, 10));
   }
 }
