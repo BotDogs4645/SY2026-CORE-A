@@ -16,6 +16,12 @@ public final class Constants {
   private static WheelType wheelType = WheelType.BILLET;
   // da da da da da da da da da da da
 
+  // da da da da da da da da da da da
+  // tuning mode - set to false for competition
+  public static final boolean tuningMode = true;
+  public static final boolean disableHAL = false; //todo soon
+  // da da da da da da da da da da da
+
   // endgame alert times
   public static final double ENDGAME_ALERT_1_TIME = 30.0;
   public static final double ENDGAME_ALERT_2_TIME = 15.0;

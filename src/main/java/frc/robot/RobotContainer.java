@@ -66,10 +66,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(SwerveConfig.FrontRight),
                 new ModuleIOTalonFX(SwerveConfig.BackLeft),
                 new ModuleIOTalonFX(SwerveConfig.BackRight));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation));
+        vision = new Vision(new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation));
 
         break;
 
@@ -84,7 +81,6 @@ public class RobotContainer {
                 new ModuleIOSim(SwerveConfig.BackRight));
         vision =
             new Vision(
-                drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose));
         break;
@@ -98,7 +94,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        vision = new Vision(new VisionIO() {});
         break;
     }
 

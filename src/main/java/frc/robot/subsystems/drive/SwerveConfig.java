@@ -21,9 +21,9 @@ import frc.robot.subsystems.drive.DriveConstants.ModuleConfig;
 public class SwerveConfig {
   // Closed-loop output types
   private static final SwerveModuleConstants.ClosedLoopOutputType steerClosedLoopOutput =
-      SwerveModuleConstants.ClosedLoopOutputType.Voltage;
+      SwerveModuleConstants.ClosedLoopOutputType.TorqueCurrentFOC;
   private static final SwerveModuleConstants.ClosedLoopOutputType driveClosedLoopOutput =
-      SwerveModuleConstants.ClosedLoopOutputType.Voltage;
+      SwerveModuleConstants.ClosedLoopOutputType.TorqueCurrentFOC;
 
   // Motor types
   private static final DriveMotorArrangement driveMotorType =

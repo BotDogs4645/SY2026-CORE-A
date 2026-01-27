@@ -2,29 +2,25 @@ package frc.robot.subsystems.vision;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
+import frc.robot.RobotState.VisionObservation;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
-  private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
 
-  public Vision(VisionConsumer consumer, VisionIO... io) {
-    this.consumer = consumer;
+  public Vision(VisionIO... io) {
     this.io = io;
 
     // Initialize inputs
@@ -124,11 +120,13 @@ public class Vision extends SubsystemBase {
           angularStdDev *= cameraStdDevFactors[cameraIndex];
         }
 
-        // Send vision observation
-        consumer.accept(
-            observation.pose().toPose2d(),
-            observation.timestamp(),
-            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+        // Send vision observation to RobotState
+        RobotState.getInstance()
+            .addVisionObservation(
+                new VisionObservation(
+                    observation.pose().toPose2d(),
+                    observation.timestamp(),
+                    VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)));
       }
 
       // Log camera metadata
@@ -157,13 +155,5 @@ public class Vision extends SubsystemBase {
         "Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(new Pose3d[0]));
     Logger.recordOutput(
         "Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(new Pose3d[0]));
-  }
-
-  @FunctionalInterface
-  public interface VisionConsumer {
-    void accept(
-        Pose2d visionRobotPoseMeters,
-        double timestampSeconds,
-        Matrix<N3, N1> visionMeasurementStdDevs);
   }
 }
