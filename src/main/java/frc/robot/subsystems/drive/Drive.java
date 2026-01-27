@@ -1,3 +1,10 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
@@ -41,7 +48,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
-  // Odometry frequency based on CAN bus type
+  // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY = DriveConstants.canBus.isNetworkFD() ? 250.0 : 100.0;
   public static final double DRIVE_BASE_RADIUS =
       Math.hypot(DriveConstants.trackWidthX / 2, DriveConstants.trackWidthY / 2);
@@ -71,17 +78,16 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
-  private final SwerveDriveKinematics kinematics =
-      new SwerveDriveKinematics(getModuleTranslations());
+  private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
-  private final SwerveModulePosition[] lastModulePositions = // For delta tracking
+  private SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
         new SwerveModulePosition(),
         new SwerveModulePosition(),
         new SwerveModulePosition()
       };
-  private final SwerveDrivePoseEstimator poseEstimator =
+  private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
   public Drive(
@@ -115,10 +121,13 @@ public class Drive extends SubsystemBase {
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
-        (activePath) ->
-            Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0])));
+        (activePath) -> {
+          Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
+        });
     PathPlannerLogging.setLogTargetPoseCallback(
-        (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
+        (targetPose) -> {
+          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+        });
 
     // Configure SysId
     sysId =

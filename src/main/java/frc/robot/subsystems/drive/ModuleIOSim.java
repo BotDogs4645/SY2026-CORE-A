@@ -1,3 +1,10 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 package frc.robot.subsystems.drive;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -35,8 +42,8 @@ public class ModuleIOSim implements ModuleIO {
 
   private boolean driveClosedLoop = false;
   private boolean turnClosedLoop = false;
-  private final PIDController driveController = new PIDController(DRIVE_KP, 0, DRIVE_KD);
-  private final PIDController turnController = new PIDController(TURN_KP, 0, TURN_KD);
+  private PIDController driveController = new PIDController(DRIVE_KP, 0, DRIVE_KD);
+  private PIDController turnController = new PIDController(TURN_KP, 0, TURN_KD);
   private double driveFFVolts = 0.0;
   private double driveAppliedVolts = 0.0;
   private double turnAppliedVolts = 0.0;

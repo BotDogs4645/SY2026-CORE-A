@@ -12,17 +12,9 @@ public final class Constants {
   // da da da da da da da da da da da
   // CHANGE THESE TO THE CORRECT VALUE FOR THE ROBOT
   // DO NOT FORGET
-  private static RobotType robotType = RobotType.COMPBOT;
+  private static RobotType robotType = RobotType.SIMBOT;
   private static WheelType wheelType = WheelType.BILLET;
   // da da da da da da da da da da da
-
-  // endgame alert times
-  public static final double ENDGAME_ALERT_1_TIME = 30.0;
-  public static final double ENDGAME_ALERT_2_TIME = 15.0;
-
-  // battery monitoring
-  public static final double LOW_BATTERY_VOLTAGE = 11.5;
-  public static final double LOW_BATTERY_DISABLED_TIME = 1.5; // seconds
 
   @SuppressWarnings("resource")
   public static RobotType getRobot() {

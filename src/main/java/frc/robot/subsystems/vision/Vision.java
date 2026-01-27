@@ -1,3 +1,10 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 package frc.robot.subsystems.vision;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
@@ -78,7 +85,9 @@ public class Vision extends SubsystemBase {
       // Add tag poses
       for (int tagId : inputs[cameraIndex].tagIds) {
         var tagPose = aprilTagLayout.getTagPose(tagId);
-        tagPose.ifPresent(tagPoses::add);
+        if (tagPose.isPresent()) {
+          tagPoses.add(tagPose.get());
+        }
       }
 
       // Loop over pose observations
@@ -160,8 +169,8 @@ public class Vision extends SubsystemBase {
   }
 
   @FunctionalInterface
-  public interface VisionConsumer {
-    void accept(
+  public static interface VisionConsumer {
+    public void accept(
         Pose2d visionRobotPoseMeters,
         double timestampSeconds,
         Matrix<N3, N1> visionMeasurementStdDevs);

@@ -1,3 +1,10 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 package frc.robot.subsystems.drive;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -46,7 +53,7 @@ public class PhoenixOdometryThread extends Thread {
 
   @Override
   public void start() {
-    if (!timestampQueues.isEmpty()) {
+    if (timestampQueues.size() > 0) {
       super.start();
     }
   }
@@ -97,8 +104,6 @@ public class PhoenixOdometryThread extends Thread {
   }
 
   @Override
-  @SuppressWarnings(
-      "InfiniteLoopStatement") // daemon thread runs for robot lifetime; sleeps each iteration
   public void run() {
     while (true) {
       // Wait for updates from all signals

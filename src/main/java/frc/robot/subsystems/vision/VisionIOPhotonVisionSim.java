@@ -1,3 +1,10 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 package frc.robot.subsystems.vision;
 
 import static frc.robot.subsystems.vision.VisionConstants.aprilTagLayout;
@@ -14,8 +21,6 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
   private static VisionSystemSim visionSim;
 
   private final Supplier<Pose2d> poseSupplier;
-
-  @SuppressWarnings("FieldCanBeLocal") // keep as field for consistency with other hardware objects
   private final PhotonCameraSim cameraSim;
 
   /**
