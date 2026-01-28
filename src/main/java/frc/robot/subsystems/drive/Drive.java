@@ -32,6 +32,7 @@ import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.LoggedTunableNumber;
 import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
 import frc.robot.util.swerve.SwerveSetpointGenerator;
@@ -46,6 +47,22 @@ public class Drive extends SubsystemBase {
   static final double ODOMETRY_FREQUENCY = DriveConstants.canBus.isNetworkFD() ? 250.0 : 100.0;
   public static final double DRIVE_BASE_RADIUS =
       Math.hypot(DriveConstants.trackWidthX / 2, DriveConstants.trackWidthY / 2);
+
+  // setpoint generator limits
+  private static final LoggedTunableNumber maxDriveAcceleration =
+      new LoggedTunableNumber("Drive/MaxDriveAcceleration", 10.0);
+  private static final LoggedTunableNumber maxSteeringVelocity =
+      new LoggedTunableNumber("Drive/MaxSteeringVelocity", Math.PI * 8);
+
+  // pathplanner PID
+  private static final LoggedTunableNumber ppTranslationKp =
+      new LoggedTunableNumber("Drive/PP/TranslationKp", 5.0);
+  private static final LoggedTunableNumber ppTranslationKd =
+      new LoggedTunableNumber("Drive/PP/TranslationKd", 0.0);
+  private static final LoggedTunableNumber ppRotationKp =
+      new LoggedTunableNumber("Drive/PP/RotationKp", 5.0);
+  private static final LoggedTunableNumber ppRotationKd =
+      new LoggedTunableNumber("Drive/PP/RotationKd", 0.0);
 
   // PathPlanner config constants
   private static final double ROBOT_MASS_KG = 74.088;
@@ -86,7 +103,6 @@ public class Drive extends SubsystemBase {
   // setpoint generator for smooth swerve motion
   private final SwerveSetpointGenerator setpointGenerator;
   private SwerveSetpoint currentSetpoint;
-  private final ModuleLimits moduleLimits;
 
   public Drive(
       GyroIO gyroIO,
@@ -105,11 +121,6 @@ public class Drive extends SubsystemBase {
 
     // initialize setpoint generator
     setpointGenerator = new SwerveSetpointGenerator(kinematics, getModuleTranslations());
-    moduleLimits =
-        new ModuleLimits(
-            WheelConstants.speedAt12Volts.in(MetersPerSecond), // maxDriveVelocity
-            10.0, // maxDriveAcceleration (m/s^2) - TODO: tune this
-            Math.PI * 8); // maxSteeringVelocity (rad/s) - TODO: tune this
     currentSetpoint =
         new SwerveSetpoint(
             new ChassisSpeeds(),
@@ -130,7 +141,8 @@ public class Drive extends SubsystemBase {
         this::getChassisSpeeds,
         this::runVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+            new PIDConstants(ppTranslationKp.get(), 0.0, ppTranslationKd.get()),
+            new PIDConstants(ppRotationKp.get(), 0.0, ppRotationKd.get())),
         PP_CONFIG,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -219,8 +231,13 @@ public class Drive extends SubsystemBase {
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
 
     // use setpoint generator to enforce module limits
+    ModuleLimits currentLimits =
+        new ModuleLimits(
+            WheelConstants.speedAt12Volts.in(MetersPerSecond),
+            maxDriveAcceleration.get(),
+            maxSteeringVelocity.get());
     currentSetpoint =
-        setpointGenerator.generateSetpoint(moduleLimits, currentSetpoint, discreteSpeeds, 0.02);
+        setpointGenerator.generateSetpoint(currentLimits, currentSetpoint, discreteSpeeds, 0.02);
 
     SwerveModuleState[] setpointStates = currentSetpoint.moduleStates();
 

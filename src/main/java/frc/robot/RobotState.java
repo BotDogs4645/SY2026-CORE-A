@@ -18,9 +18,7 @@ import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-/**
- * Centralized robot state estimation
- */
+/** Centralized robot state estimation */
 public class RobotState extends VirtualSubsystem {
   private static RobotState instance;
 
@@ -132,7 +130,7 @@ public class RobotState extends VirtualSubsystem {
 
   /** returns the current heading from the estimated pose */
   public Rotation2d getRotation() {
-    return estimatedPose.getRotation();
+    return getEstimatedPose().getRotation();
   }
 
   /** record for odometry observations from the drive subsystem */

@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.LoggedTunableNumber;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -25,10 +26,14 @@ import java.util.function.Supplier;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
-  private static final double ANGLE_KP = 5.0;
-  private static final double ANGLE_KD = 0.4;
-  private static final double ANGLE_MAX_VELOCITY = 8.0;
-  private static final double ANGLE_MAX_ACCELERATION = 20.0;
+  private static final LoggedTunableNumber angleKp =
+      new LoggedTunableNumber("DriveCommands/AngleKp", 5.0);
+  private static final LoggedTunableNumber angleKd =
+      new LoggedTunableNumber("DriveCommands/AngleKd", 0.4);
+  private static final LoggedTunableNumber angleMaxVelocity =
+      new LoggedTunableNumber("DriveCommands/AngleMaxVelocity", 8.0);
+  private static final LoggedTunableNumber angleMaxAcceleration =
+      new LoggedTunableNumber("DriveCommands/AngleMaxAcceleration", 20.0);
   private static final double FF_START_DELAY = 2.0; // Secs
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
@@ -103,15 +108,28 @@ public class DriveCommands {
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
-            ANGLE_KP,
+            angleKp.get(),
             0.0,
-            ANGLE_KD,
-            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+            angleKd.get(),
+            new TrapezoidProfile.Constraints(angleMaxVelocity.get(), angleMaxAcceleration.get()));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
     // Construct command
     return Commands.run(
             () -> {
+              // update PID from tunable numbers
+              LoggedTunableNumber.ifChanged(
+                  angleController.hashCode(),
+                  values -> {
+                    angleController.setPID(values[0], 0.0, values[1]);
+                    angleController.setConstraints(
+                        new TrapezoidProfile.Constraints(values[2], values[3]));
+                  },
+                  angleKp,
+                  angleKd,
+                  angleMaxVelocity,
+                  angleMaxAcceleration);
+
               // Get linear velocity
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
