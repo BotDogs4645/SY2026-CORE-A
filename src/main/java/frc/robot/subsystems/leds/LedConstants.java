@@ -1,6 +1,9 @@
 package frc.robot.subsystems.leds;
 
-/** placeholder constants for LED hardware configuration, someone needs to update this once hardware is decided */
+/**
+ * placeholder constants for LED hardware configuration, someone needs to update this once hardware
+ * is decided
+ */
 public final class LedConstants {
   private LedConstants() {} // prevent instantiation
 

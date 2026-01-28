@@ -60,7 +60,7 @@ public class DriveConstants {
 
   private static final ModuleConfig[] moduleConfigsComp = {
     // FL - from TunerConstants
-    new ModuleConfig(13, 12, 14, Rotations.of(-0.04931640625), false, false),
+    new ModuleConfig(13, 12, 14, Rotations.of(0.2676), false, false),
     // FR
     new ModuleConfig(4, 3, 5, Rotations.of(0.026123046875), false, false),
     // BL
