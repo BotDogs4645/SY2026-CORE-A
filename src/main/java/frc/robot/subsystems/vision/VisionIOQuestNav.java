@@ -2,6 +2,8 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 import java.util.LinkedList;
@@ -11,6 +13,8 @@ import java.util.List;
 public class VisionIOQuestNav implements VisionIO {
   private final QuestNav questNav;
   private final Transform3d robotToQuest;
+  private final Alert lowBatteryAlert =
+      new Alert("QuestNav battery below 50%! Charge it!!!", AlertType.kWarning);
 
   public VisionIOQuestNav() {
     this.questNav = new QuestNav();
@@ -22,6 +26,7 @@ public class VisionIOQuestNav implements VisionIO {
     questNav.commandPeriodic();
 
     inputs.connected = questNav.isConnected();
+    questNav.getBatteryPercent().ifPresent(battery -> lowBatteryAlert.set(battery < 50.0));
 
     PoseFrame[] frames = questNav.getAllUnreadPoseFrames();
     List<PoseObservation> observations = new LinkedList<>();
