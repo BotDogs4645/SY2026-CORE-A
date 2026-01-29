@@ -12,7 +12,7 @@ public final class Constants {
   // da da da da da da da da da da da
   // CHANGE THESE TO THE CORRECT VALUE FOR THE ROBOT
   // DO NOT FORGET
-  private static RobotType robotType = RobotType.SIMBOT;
+  private static RobotType robotType = RobotType.COMPBOT;
   private static WheelType wheelType = WheelType.BILLET;
   // da da da da da da da da da da da
 
@@ -68,10 +68,10 @@ public final class Constants {
   }
 
   public class TurretConstants {
-    public static final int ROTATION_MOTOR_ID = 5;
+    public static final int ROTATION_MOTOR_ID = 20;
     public static final double ROTATION_GEAR_RATIO = 2.5;
-    public static final double ROTATION_kP = 20;
-    public static final double ROTATION_kI = 0.5;
-    public static final double ROTATION_kD = 4;
+    public static final double ROTATION_kP = 0.2;
+    public static final double ROTATION_kI = 0;
+    public static final double ROTATION_kD = 0;
   }
 }

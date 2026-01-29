@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import org.littletonrobotics.junction.Logger;
 
 public class Turret extends SubsystemBase {
@@ -31,7 +32,7 @@ public class Turret extends SubsystemBase {
 
   /** Creates a new Turret. */
   public Turret() {
-    turretRotationMotor = new TalonFX(Constants.TurretConstants.ROTATION_MOTOR_ID);
+    turretRotationMotor = new TalonFX(Constants.TurretConstants.ROTATION_MOTOR_ID, "CANivore");
 
     Slot0Configs configs =
         new Slot0Configs()
@@ -53,26 +54,33 @@ public class Turret extends SubsystemBase {
   public void periodic() {
     Logger.recordOutput("Turret/position", turretRotationMotor.getPosition().getValueAsDouble());
     Logger.recordOutput("Turret/velocity", turretRotationMotor.getVelocity().getValueAsDouble());
-    var talonFXSim = turretRotationMotor.getSimState();
 
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+    if (!Robot.isReal()) {
+      var talonFXSim = turretRotationMotor.getSimState();
 
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
+      // set the supply voltage of the TalonFX
+      talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    m_motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    m_motorSimModel.update(0.020); // assume 20 ms loop time
+      // get the motor voltage of the TalonFX
+      var motorVoltage = talonFXSim.getMotorVoltageMeasure();
 
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(
-        m_motorSimModel.getAngularPosition().times(Constants.TurretConstants.ROTATION_GEAR_RATIO));
-    talonFXSim.setRotorVelocity(
-        m_motorSimModel.getAngularVelocity().times(Constants.TurretConstants.ROTATION_GEAR_RATIO));
+      // use the motor voltage to calculate new position and velocity
+      // using WPILib's DCMotorSim class for physics simulation
+      m_motorSimModel.setInputVoltage(motorVoltage.in(Volts));
+      m_motorSimModel.update(0.020); // assume 20 ms loop time
+
+      // apply the new rotor position and velocity to the TalonFX;
+      // note that this is rotor position/velocity (before gear ratio), but
+      // DCMotorSim returns mechanism position/velocity (after gear ratio)
+      talonFXSim.setRawRotorPosition(
+          m_motorSimModel
+              .getAngularPosition()
+              .times(Constants.TurretConstants.ROTATION_GEAR_RATIO));
+      talonFXSim.setRotorVelocity(
+          m_motorSimModel
+              .getAngularVelocity()
+              .times(Constants.TurretConstants.ROTATION_GEAR_RATIO));
+    }
   }
 
   public void startTurret() {

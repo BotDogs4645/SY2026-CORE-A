@@ -22,6 +22,7 @@ public class KeepTurretAlignedToHub extends Command {
 
   private Turret turret;
   private Drive drive;
+  private PositionDutyCycle controlRequest;
 
   /** Creates a new KeepTurretAlignedToHub. */
   public KeepTurretAlignedToHub(Turret turret, Drive drive) {
@@ -33,7 +34,22 @@ public class KeepTurretAlignedToHub extends Command {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    Pose2d drivePose = drive.getPose();
+    Translation2d hubLocation = new Translation2d(4.634, 4.003);
+    Translation2d vectorToHub = hubLocation.minus(drivePose.getTranslation());
+
+    Logger.recordOutput("Turret/vectorToHub", vectorToHub);
+
+    Rotation2d rotationToHub = new Rotation2d(vectorToHub.getX(), vectorToHub.getY());
+    Logger.recordOutput("Turret/rotationToHub", rotationToHub.getDegrees());
+    controlRequest =
+        new PositionDutyCycle(Angle.ofBaseUnits(rotationToHub.getRotations(), Rotations));
+
+    turret.setControl(controlRequest);
+
+    Logger.recordOutput("Turret/rotationToHub", rotationToHub.getDegrees());
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
@@ -46,8 +62,12 @@ public class KeepTurretAlignedToHub extends Command {
 
     Rotation2d rotationToHub = new Rotation2d(vectorToHub.getX(), vectorToHub.getY());
     Logger.recordOutput("Turret/rotationToHub", rotationToHub.getDegrees());
+
     turret.setControl(
-        new PositionDutyCycle(Angle.ofBaseUnits(rotationToHub.getRotations(), Rotations)));
+        controlRequest.withPosition(Angle.ofBaseUnits(rotationToHub.getRotations(), Rotations)));
+    Logger.recordOutput("Turrent/targetPosition", controlRequest.Position);
+
+    Logger.recordOutput("Turret/rotationToHub", rotationToHub.getDegrees());
   }
 
   // Called once the command ends or is interrupted.
