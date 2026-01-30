@@ -66,4 +66,10 @@ public final class Constants {
     SPIKE_GRIP, // Spike Grip wheels
     BILLET // Billet wheels
   }
+
+  public static boolean disableHAL = false;
+
+  public static void disableHAL() {
+    disableHAL = true;
+  }
 }
