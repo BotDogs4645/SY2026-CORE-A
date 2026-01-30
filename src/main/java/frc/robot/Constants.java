@@ -19,9 +19,6 @@ public final class Constants {
   // tuning mode - enables dashboard-tunable values
   public static final boolean tuningMode = false;
 
-  // loop period for motion profiles
-  public static final double loopPeriodSecs = 0.02;
-
   // endgame alert times
   public static final double ENDGAME_ALERT_1_TIME = 30.0;
   public static final double ENDGAME_ALERT_2_TIME = 15.0;
@@ -29,6 +26,9 @@ public final class Constants {
   // battery monitoring
   public static final double LOW_BATTERY_VOLTAGE = 11.5;
   public static final double LOW_BATTERY_DISABLED_TIME = 1.5; // seconds
+
+  public static final double loopPeriodSecs = 0.02;
+  public static final double loopPeriodWatchdogSecs = 0.2;
 
   @SuppressWarnings("resource")
   public static RobotType getRobot() {
