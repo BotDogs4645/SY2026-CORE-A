@@ -44,4 +44,20 @@ public class VisionConstants {
   public static final double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
   public static final double angularStdDevMegatag2Factor =
       Double.POSITIVE_INFINITY; // No rotation data available
+
+  // QuestNav configuration
+  public static final Transform3d robotToQuestTransform =
+      new Transform3d(
+          0.0,
+          0.0,
+          0.5, // x, y, z offset from robot center (meters)
+          new Rotation3d(0.0, 0.0, 0.0) // roll, pitch, yaw
+          );
+
+  // QuestNav standard deviations
+  public static final double questNavLinearStdDev = 0.02; // meters
+  public static final double questNavAngularStdDev = 0.035; // radians (~2 deg)
+
+  // multiplier to adjust QuestNav trust (>1 = less trust, <1 = more trust)
+  public static final double questNavStdDevFactor = 1.0;
 }

@@ -84,18 +84,29 @@ public class Vision extends SubsystemBase {
       // Loop over pose observations
       for (var observation : inputs[cameraIndex].poseObservations) {
         // Check whether to reject pose
-        boolean rejectPose =
-            observation.tagCount() == 0 // Must have at least one tag
-                || (observation.tagCount() == 1
-                    && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity
-                || Math.abs(observation.pose().getZ())
-                    > maxZError // Must have realistic Z coordinate
+        boolean rejectPose;
+        if (observation.type() == PoseObservationType.QUESTNAV) {
+          // QuestNav: only check field boundaries
+          rejectPose =
+              observation.pose().getX() < 0.0
+                  || observation.pose().getX() > aprilTagLayout.getFieldLength()
+                  || observation.pose().getY() < 0.0
+                  || observation.pose().getY() > aprilTagLayout.getFieldWidth();
+        } else {
+          // AprilTag-based: existing checks
+          rejectPose =
+              observation.tagCount() == 0 // Must have at least one tag
+                  || (observation.tagCount() == 1
+                      && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity
+                  || Math.abs(observation.pose().getZ())
+                      > maxZError // Must have realistic Z coordinate
 
-                // Must be within the field boundaries
-                || observation.pose().getX() < 0.0
-                || observation.pose().getX() > aprilTagLayout.getFieldLength()
-                || observation.pose().getY() < 0.0
-                || observation.pose().getY() > aprilTagLayout.getFieldWidth();
+                  // Must be within the field boundaries
+                  || observation.pose().getX() < 0.0
+                  || observation.pose().getX() > aprilTagLayout.getFieldLength()
+                  || observation.pose().getY() < 0.0
+                  || observation.pose().getY() > aprilTagLayout.getFieldWidth();
+        }
 
         // Add pose to log
         robotPoses.add(observation.pose());
@@ -111,13 +122,23 @@ public class Vision extends SubsystemBase {
         }
 
         // Calculate standard deviations
-        double stdDevFactor =
-            Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-        double linearStdDev = linearStdDevBaseline * stdDevFactor;
-        double angularStdDev = angularStdDevBaseline * stdDevFactor;
-        if (observation.type() == PoseObservationType.MEGATAG_2) {
-          linearStdDev *= linearStdDevMegatag2Factor;
-          angularStdDev *= angularStdDevMegatag2Factor;
+        double linearStdDev;
+        double angularStdDev;
+
+        if (observation.type() == PoseObservationType.QUESTNAV) {
+          // QuestNav: fixed std devs (not distance-based)
+          linearStdDev = questNavLinearStdDev * questNavStdDevFactor;
+          angularStdDev = questNavAngularStdDev * questNavStdDevFactor;
+        } else {
+          // AprilTag: distance-based calculation
+          double stdDevFactor =
+              Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+          linearStdDev = linearStdDevBaseline * stdDevFactor;
+          angularStdDev = angularStdDevBaseline * stdDevFactor;
+          if (observation.type() == PoseObservationType.MEGATAG_2) {
+            linearStdDev *= linearStdDevMegatag2Factor;
+            angularStdDev *= angularStdDevMegatag2Factor;
+          }
         }
         if (cameraIndex < cameraStdDevFactors.length) {
           linearStdDev *= cameraStdDevFactors[cameraIndex];

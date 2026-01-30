@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -25,6 +26,7 @@ import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.Rumble;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -44,6 +46,8 @@ public class RobotContainer {
     "FieldCanBeLocal"
   }) // Subsystem runs via CommandScheduler and communicates via callback
   private final Vision vision;
+
+  private VisionIOQuestNav questNavIO;
 
   // Controllers
   private final CommandXboxController driver = new CommandXboxController(0);
@@ -66,10 +70,14 @@ public class RobotContainer {
                 new ModuleIOTalonFX(SwerveConfig.FrontRight),
                 new ModuleIOTalonFX(SwerveConfig.BackLeft),
                 new ModuleIOTalonFX(SwerveConfig.BackRight));
+
+        questNavIO = new VisionIOQuestNav();
+
         vision =
             new Vision(
                 drive::addVisionMeasurement,
-                new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation));
+                new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation),
+                questNavIO);
 
         break;
 
@@ -128,7 +136,7 @@ public class RobotContainer {
     configureAlerts();
 
     // Configure rumble demos for drive team testing
-    configureRumbleDemos();
+    //    configureRumbleDemos();
   }
 
   /**
@@ -153,14 +161,37 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
+    // Reset robot pose to origin when X button is pressed
+    //    driver
+    //        .x()
+    //        .onTrue(Commands.runOnce(() -> drive.setPose(new Pose2d()),
+    // drive).ignoringDisable(true));
+
+    // Reset QuestNav pose to match current drive pose when back button is pressed
+    //    driver
+    //        .y()
+    //        .onTrue(
+    //            Commands.runOnce(
+    //                    () -> {
+    //                      if (questNavIO != null) {
+    //                        questNavIO.setPose(new Pose3d(drive.getPose()));
+    //                      }
+    //                    })
+    //                .ignoringDisable(true));
+
     // Reset gyro to 0° when B button is pressed
     driver
         .b()
         .onTrue(
             Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                    () -> {
+                      Pose2d newPose =
+                          new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero);
+                      drive.setPose(newPose);
+                      if (questNavIO != null) {
+                        questNavIO.setPose(new Pose3d(newPose));
+                      }
+                    },
                     drive)
                 .ignoringDisable(true));
   }
