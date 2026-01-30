@@ -39,7 +39,9 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.subsystems.vision.VisionIOQuestNav;
+import frc.robot.util.BallVisualizer;
 import frc.robot.util.Rumble;
+import frc.robot.util.ShooterMechanism;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -62,6 +64,8 @@ public class RobotContainer {
   private final Turret turret;
   private final Hood hood;
   private final Flywheel flywheel;
+
+  private final ShooterMechanism shooterMechanism = new ShooterMechanism();
 
   private VisionIOQuestNav questNavIO;
 
@@ -157,6 +161,10 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    // wire up visualizers
+    BallVisualizer.setRobotPoseSupplier(drive::getPose);
+    BallVisualizer.setShooterStateSuppliers(turret::getPosition, hood::getPosition);
+
     // Configure the button bindings
     configureButtonBindings();
 
@@ -206,6 +214,9 @@ public class RobotContainer {
     //                      }
     //                    })
     //                .ignoringDisable(true));
+
+    // turret tracks hub by default
+    turret.setDefaultCommand(turret.trackHubCommand(drive::getPose));
 
     // zero turret and hood when start button is pressed
     driver
@@ -299,6 +310,22 @@ public class RobotContainer {
    * configures rumble demo bindings for drive team to test different feedback types. uses D-pad and
    * Y button. u better not forget to remove this method before competition.
    */
+  public ShooterMechanism getShooterMechanism() {
+    return shooterMechanism;
+  }
+
+  public Turret getTurret() {
+    return turret;
+  }
+
+  public Hood getHood() {
+    return hood;
+  }
+
+  public Flywheel getFlywheel() {
+    return flywheel;
+  }
+
   private void configureRumbleDemos() {
     GenericHID hid = driver.getHID();
 

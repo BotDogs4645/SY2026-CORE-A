@@ -1,15 +1,21 @@
 package frc.robot.subsystems.shooter.turret;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.util.FullSubsystem;
 import frc.robot.util.LoggedTunableNumber;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -144,6 +150,35 @@ public class Turret extends FullSubsystem {
   /** command to move to a fixed angle in radians */
   public Command runFixedCommand(double angleRad) {
     return Commands.runOnce(() -> setGoal(angleRad), this).andThen(Commands.idle(this));
+  }
+
+  /** command to continuously track the alliance hub center using the robot pose */
+  public Command trackHubCommand(Supplier<Pose2d> robotPoseSupplier) {
+    return Commands.run(
+            () -> {
+              Pose2d pose = robotPoseSupplier.get();
+
+              // pick hub based on alliance
+              boolean isRed =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+              Translation2d hubCenter =
+                  isRed
+                      ? FieldConstants.Hub.oppTopCenterPoint.toTranslation2d()
+                      : FieldConstants.Hub.topCenterPoint.toTranslation2d();
+
+              // field-relative angle from robot to hub
+              double dx = hubCenter.getX() - pose.getX();
+              double dy = hubCenter.getY() - pose.getY();
+              double fieldAngleToHub = Math.atan2(dy, dx);
+
+              // convert to turret-relative angle (turret 0 = robot forward)
+              double turretAngle = fieldAngleToHub - pose.getRotation().getRadians();
+
+              setGoal(turretAngle);
+            },
+            this)
+        .withName("TrackHub");
   }
 
   /** command to zero the turret at the endstop */

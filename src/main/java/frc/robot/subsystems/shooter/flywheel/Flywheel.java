@@ -101,6 +101,11 @@ public class Flywheel extends FullSubsystem {
             < torqueCurrentControlTolerance.get());
   }
 
+  /** returns the current flywheel velocity in rad/s */
+  public double getVelocity() {
+    return inputs.velocityRadsPerSec;
+  }
+
   /** returns the number of detected shots */
   @AutoLogOutput(key = "Flywheel/shotCount")
   public int getShotCount() {

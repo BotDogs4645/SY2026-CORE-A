@@ -18,6 +18,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.shooter.ShooterConstants;
 
 public class TurretIOTalonFX implements TurretIO {
@@ -39,7 +40,7 @@ public class TurretIOTalonFX implements TurretIO {
   private double lastKD = Double.NaN;
 
   public TurretIOTalonFX() {
-    talon = new TalonFX(ShooterConstants.turretMotorId);
+    talon = new TalonFX(ShooterConstants.turretMotorId, DriveConstants.canBus);
 
     var config = new TalonFXConfiguration();
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;

@@ -13,5 +13,11 @@ public class ShooterConstants {
 
   // TODO: physical offsets
   public static final double turretXOffsetMeters = 0.0;
-  public static final double turretZOffsetMeters = 0.0;
+  public static final double turretZOffsetMeters = 0.5;
+
+  // visualization constants
+  public static final double hoodArmLengthMeters = 0.3;
+  public static final double flywheelMaxVelocityRadsPerSec = 600.0;
+  public static final double shotFlightDurationSecs = 1.0;
+  public static final int shotTracerPointCount = 20;
 }
