@@ -16,6 +16,12 @@ public final class Constants {
   private static WheelType wheelType = WheelType.BILLET;
   // da da da da da da da da da da da
 
+  // tuning mode - enables dashboard-tunable values
+  public static final boolean tuningMode = false;
+
+  // loop period for motion profiles
+  public static final double loopPeriodSecs = 0.02;
+
   // endgame alert times
   public static final double ENDGAME_ALERT_1_TIME = 30.0;
   public static final double ENDGAME_ALERT_2_TIME = 15.0;

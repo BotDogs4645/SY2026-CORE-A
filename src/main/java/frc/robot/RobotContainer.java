@@ -21,6 +21,18 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.SwerveConfig;
 import frc.robot.subsystems.leds.Leds;
+import frc.robot.subsystems.shooter.flywheel.Flywheel;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
+import frc.robot.subsystems.shooter.hood.Hood;
+import frc.robot.subsystems.shooter.hood.HoodIO;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIOTalonFX;
+import frc.robot.subsystems.shooter.turret.Turret;
+import frc.robot.subsystems.shooter.turret.TurretIO;
+import frc.robot.subsystems.shooter.turret.TurretIOSim;
+import frc.robot.subsystems.shooter.turret.TurretIOTalonFX;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
@@ -46,6 +58,10 @@ public class RobotContainer {
     "FieldCanBeLocal"
   }) // Subsystem runs via CommandScheduler and communicates via callback
   private final Vision vision;
+
+  private final Turret turret;
+  private final Hood hood;
+  private final Flywheel flywheel;
 
   private VisionIOQuestNav questNavIO;
 
@@ -79,6 +95,10 @@ public class RobotContainer {
                 new VisionIOLimelight(VisionConstants.camera0Name, drive::getRotation),
                 questNavIO);
 
+        turret = new Turret(new TurretIOTalonFX());
+        hood = new Hood(new HoodIOTalonFX());
+        flywheel = new Flywheel(new FlywheelIOTalonFX());
+
         break;
 
       case SIM:
@@ -95,6 +115,10 @@ public class RobotContainer {
                 drive::addVisionMeasurement,
                 new VisionIOPhotonVisionSim(
                     VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose));
+
+        turret = new Turret(new TurretIOSim());
+        hood = new Hood(new HoodIOSim());
+        flywheel = new Flywheel(new FlywheelIOSim());
         break;
 
       default:
@@ -107,6 +131,10 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         vision = new Vision(drive::addVisionMeasurement, new VisionIO() {});
+
+        turret = new Turret(new TurretIO() {});
+        hood = new Hood(new HoodIO() {});
+        flywheel = new Flywheel(new FlywheelIO() {});
         break;
     }
 
@@ -178,6 +206,17 @@ public class RobotContainer {
     //                      }
     //                    })
     //                .ignoringDisable(true));
+
+    // zero turret and hood when start button is pressed
+    driver
+        .start()
+        .onTrue(Commands.parallel(turret.zeroCommand(), hood.zeroCommand()).ignoringDisable(true));
+
+    // test turret to 0 degrees on left bumper
+    operator.leftBumper().whileTrue(turret.runFixedCommand(0.0));
+
+    // test flywheel spin-up on right bumper
+    operator.rightBumper().whileTrue(flywheel.runFixedCommand(500.0));
 
     // Reset gyro to 0° when B button is pressed
     driver
