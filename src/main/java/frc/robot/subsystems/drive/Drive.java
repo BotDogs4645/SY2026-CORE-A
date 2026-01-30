@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
@@ -83,6 +84,10 @@ public class Drive extends SubsystemBase {
       };
   private final SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
+
+  // DO NOT USE UNLESS YOU KNOW WHAT YOU ARE DOING
+  private final SwerveDriveOdometry wheelOnlyOdometry =
+      new SwerveDriveOdometry(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
   public Drive(
       GyroIO gyroIO,
@@ -185,6 +190,7 @@ public class Drive extends SubsystemBase {
 
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+      wheelOnlyOdometry.update(rawGyroRotation, modulePositions);
     }
 
     // Update gyro alert
@@ -301,6 +307,15 @@ public class Drive extends SubsystemBase {
     return poseEstimator.getEstimatedPosition();
   }
 
+  /**
+   * YOU SHOULD PROBABLY NOT BE USING THIS - returns the current wheel-only odometry pose (no vision
+   * corrections)
+   */
+  @AutoLogOutput(key = "Odometry/WheelOnly")
+  public Pose2d getWheelOnlyPose() {
+    return wheelOnlyOdometry.getPoseMeters();
+  }
+
   /** Returns the current odometry rotation. */
   public Rotation2d getRotation() {
     return getPose().getRotation();
@@ -309,6 +324,7 @@ public class Drive extends SubsystemBase {
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
+    wheelOnlyOdometry.resetPosition(rawGyroRotation, getModulePositions(), pose);
   }
 
   /** Adds a new timestamped vision measurement. */

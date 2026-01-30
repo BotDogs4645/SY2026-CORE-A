@@ -161,6 +161,24 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
+    // Reset robot pose to origin when X button is pressed
+    //    driver
+    //        .x()
+    //        .onTrue(Commands.runOnce(() -> drive.setPose(new Pose2d()),
+    // drive).ignoringDisable(true));
+
+    // Reset QuestNav pose to match current drive pose when back button is pressed
+    //    driver
+    //        .y()
+    //        .onTrue(
+    //            Commands.runOnce(
+    //                    () -> {
+    //                      if (questNavIO != null) {
+    //                        questNavIO.setPose(new Pose3d(drive.getPose()));
+    //                      }
+    //                    })
+    //                .ignoringDisable(true));
+
     // Reset gyro to 0° when B button is pressed
     driver
         .b()
