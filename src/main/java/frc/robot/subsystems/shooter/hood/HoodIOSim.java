@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter.hood;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
 import frc.robot.subsystems.shooter.ShooterConstants;
@@ -47,14 +48,16 @@ public class HoodIOSim implements HoodIO {
         appliedVolts = 0.0;
       }
       case CLOSED_LOOP -> {
-        // current-based control
-        double positionError = outputs.positionRad - sim.getAngleRads();
-        double velocityError = outputs.velocityRadsPerSec - sim.getVelocityRadPerSec();
+        // errors in rotations to match TalonFX PositionTorqueCurrentFOC units
+        double positionError = Units.radiansToRotations(outputs.positionRad - sim.getAngleRads());
+        double velocityError =
+            Units.radiansToRotations(outputs.velocityRadsPerSec - sim.getVelocityRadPerSec());
         double torqueCurrent = outputs.kP * positionError + outputs.kD * velocityError;
 
-        // convert torque current to voltage using motor model: V = I*R + oh muh guh/Kv
+        // convert torque current to voltage: V = I*R + omega_motor/Kv
+        double motorVelocityRadPerSec = sim.getVelocityRadPerSec() * ShooterConstants.hoodGearRatio;
         appliedVolts =
-            torqueCurrent * MOTOR.rOhms + sim.getVelocityRadPerSec() / MOTOR.KvRadPerSecPerVolt;
+            torqueCurrent * MOTOR.rOhms + motorVelocityRadPerSec / MOTOR.KvRadPerSecPerVolt;
         appliedVolts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
       }
     }

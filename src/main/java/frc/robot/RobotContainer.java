@@ -1,9 +1,11 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -21,6 +23,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.SwerveConfig;
 import frc.robot.subsystems.leds.Leds;
+import frc.robot.subsystems.shooter.AutoShotCalculator;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -66,6 +69,8 @@ public class RobotContainer {
   private final Flywheel flywheel;
 
   private final ShooterMechanism shooterMechanism = new ShooterMechanism();
+  private final AutoShotCalculator shotCalculator = new AutoShotCalculator();
+  private AutoShotCalculator.ShotSolution latestSolution = AutoShotCalculator.ShotSolution.none();
 
   private VisionIOQuestNav questNavIO;
 
@@ -164,6 +169,7 @@ public class RobotContainer {
     // wire up visualizers
     BallVisualizer.setRobotPoseSupplier(drive::getPose);
     BallVisualizer.setShooterStateSuppliers(turret::getPosition, hood::getPosition);
+    BallVisualizer.setBallCount(8);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -215,8 +221,10 @@ public class RobotContainer {
     //                    })
     //                .ignoringDisable(true));
 
-    // turret tracks hub by default
-    turret.setDefaultCommand(turret.trackHubCommand(drive::getPose));
+    // turret holds position by default, hood holds, flywheel coasts
+    turret.setDefaultCommand(turret.holdCommand());
+    hood.setDefaultCommand(hood.holdCommand());
+    flywheel.setDefaultCommand(flywheel.stopCommand().andThen(Commands.idle(flywheel)));
 
     // zero turret and hood when start button is pressed
     driver
@@ -244,6 +252,59 @@ public class RobotContainer {
                     },
                     drive)
                 .ignoringDisable(true));
+
+    // shooter controls
+    Trigger leftTriggerPressed = driver.leftTrigger();
+
+    // left trigger: auto-aim turret + hood using shot calculator
+    leftTriggerPressed
+        .and(this::isOnCorrectAllianceSide)
+        .whileTrue(
+            Commands.run(
+                    () -> {
+                      Translation3d target = getHubTarget();
+                      latestSolution =
+                          shotCalculator.calculate(
+                              drive.getPose(), drive.getChassisSpeeds(), target);
+                      if (latestSolution.isSolutionFound()) {
+                        turret.setGoal(latestSolution.turretAngleRad());
+                        hood.setGoal(latestSolution.hoodAngleRad(), 0.0);
+                      }
+                    },
+                    turret,
+                    hood)
+                .withName("AutoAim"));
+
+    // aim-locked rumble (turret + hood both at goal with valid solution)
+    Trigger aimLockedWhileAiming =
+        leftTriggerPressed
+            .and(this::isOnCorrectAllianceSide)
+            .and(turret::atGoal)
+            .and(hood::atGoal)
+            .and(() -> latestSolution.isSolutionFound())
+            .debounce(0.2, Debouncer.DebounceType.kBoth);
+
+    aimLockedWhileAiming.onTrue(Rumble.rumblePulse(driver.getHID(), 1.0, 0.15));
+    aimLockedWhileAiming.onFalse(
+        Rumble.rumblePulse(driver.getHID(), 0.8, 0.5).onlyIf(leftTriggerPressed));
+
+    // right trigger: fire (flywheel at calculated speed, or fallback)
+    driver
+        .rightTrigger()
+        .whileTrue(
+            Commands.run(
+                    () -> {
+                      double speed =
+                          latestSolution.isSolutionFound()
+                              ? latestSolution.flywheelVelocityRadPerSec()
+                              : 500.0; // fallback if no solution
+                      flywheel.setGoal(speed);
+                    },
+                    flywheel)
+                .withName("Fire"));
+
+    // wire shot detection to ball visualizer
+    flywheel.shotDetectedTrigger().onTrue(BallVisualizer.shoot());
   }
 
   /**
@@ -288,6 +349,24 @@ public class RobotContainer {
                 .finallyDo(() -> Leds.getInstance().endgameAlert = false));
   }
 
+  /** returns true if the robot is on its own alliance side of the field */
+  private boolean isOnCorrectAllianceSide() {
+    boolean isRed =
+        DriverStation.getAlliance().isPresent()
+            && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    double robotX = drive.getPose().getX();
+    double centerX = FieldConstants.fieldLength / 2.0;
+    return isRed ? robotX > centerX : robotX < centerX;
+  }
+
+  /** returns the hub target position for the current alliance */
+  private Translation3d getHubTarget() {
+    boolean isRed =
+        DriverStation.getAlliance().isPresent()
+            && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+    return isRed ? FieldConstants.Hub.oppTopCenterPoint : FieldConstants.Hub.topCenterPoint;
+  }
+
   /**
    * creates a command that rumbles the driver controller
    *
@@ -310,6 +389,10 @@ public class RobotContainer {
    * configures rumble demo bindings for drive team to test different feedback types. uses D-pad and
    * Y button. u better not forget to remove this method before competition.
    */
+  public Pose2d getDrivePose() {
+    return drive.getPose();
+  }
+
   public ShooterMechanism getShooterMechanism() {
     return shooterMechanism;
   }

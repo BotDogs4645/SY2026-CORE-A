@@ -25,8 +25,8 @@ public class Turret extends FullSubsystem {
   public static final double maxAngleRad = Units.degreesToRadians(177.5);
 
   // tunable gains
-  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Turret/kP", 0.0);
-  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Turret/kD", 0.0);
+  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Turret/kP", 0.5);
+  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Turret/kD", 1.0);
   private static final LoggedTunableNumber maxVelocity =
       new LoggedTunableNumber("Turret/maxVelocityRadPerSec", 2.0 * Math.PI);
   private static final LoggedTunableNumber maxAcceleration =
@@ -195,5 +195,10 @@ public class Turret extends FullSubsystem {
           goal = new TrapezoidProfile.State(getPosition(), 0.0);
         },
         this);
+  }
+
+  /** command to hold the current turret position */
+  public Command holdCommand() {
+    return Commands.run(() -> setGoal(getPosition()), this).withName("TurretHold");
   }
 }

@@ -16,7 +16,7 @@ public class LoggedTunableNumber implements DoubleSupplier {
   private boolean hasDefault = false;
   private double defaultValue;
   private LoggedNetworkNumber dashboardNumber;
-  private final Map<Integer, Double> lastHasChangedValues = new HashMap<>();
+  private Map<Integer, Double> lastHasChangedValues = new HashMap<>();
 
   /**
    * Create a new LoggedTunableNumber
@@ -47,7 +47,7 @@ public class LoggedTunableNumber implements DoubleSupplier {
     if (!hasDefault) {
       hasDefault = true;
       this.defaultValue = defaultValue;
-      if (Constants.tuningMode) {
+      if (Constants.tuningMode && !Constants.disableHAL) {
         dashboardNumber = new LoggedNetworkNumber(key, defaultValue);
       }
     }

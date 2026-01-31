@@ -26,6 +26,7 @@ public class BallVisualizer {
   private static DoubleSupplier hoodAngleSupplier = () -> 0.0;
 
   private static final List<ShotAnimation> activeShots = new ArrayList<>();
+  private static int ballCount = 8;
 
   private BallVisualizer() {}
 
@@ -39,6 +40,44 @@ public class BallVisualizer {
       DoubleSupplier turretAngle, DoubleSupplier hoodAngle) {
     turretAngleSupplier = turretAngle;
     hoodAngleSupplier = hoodAngle;
+  }
+
+  /** sets the number of balls in the hopper */
+  public static void setBallCount(int count) {
+    ballCount = count;
+  }
+
+  /** returns the number of balls remaining in the hopper */
+  public static int getBallCount() {
+    return ballCount;
+  }
+
+  /** logs a held ball at the shooter muzzle if any balls remain */
+  public static void showHeldBall() {
+    if (ballCount > 0) {
+      Pose2d robotPose = robotPoseSupplier.get();
+      double heading = robotPose.getRotation().getRadians();
+      double turretAngle = turretAngleSupplier.getAsDouble();
+      double hoodAngle = hoodAngleSupplier.getAsDouble();
+
+      double pivotX = robotPose.getX() + ShooterConstants.turretXOffsetMeters * Math.cos(heading);
+      double pivotY = robotPose.getY() + ShooterConstants.turretXOffsetMeters * Math.sin(heading);
+      double pivotZ = ShooterConstants.turretZOffsetMeters;
+
+      double globalTurretAngle = heading + turretAngle;
+      double horizontalExtension = ShooterConstants.hoodArmLengthMeters * Math.cos(hoodAngle);
+      double verticalExtension = ShooterConstants.hoodArmLengthMeters * Math.sin(hoodAngle);
+
+      Pose3d muzzle =
+          new Pose3d(
+              pivotX + horizontalExtension * Math.cos(globalTurretAngle),
+              pivotY + horizontalExtension * Math.sin(globalTurretAngle),
+              pivotZ + verticalExtension,
+              new Rotation3d());
+      Logger.recordOutput("BallVisualizer/HeldBalls", new Pose3d[] {muzzle});
+    } else {
+      Logger.recordOutput("BallVisualizer/HeldBalls", new Pose3d[0]);
+    }
   }
 
   /** returns a command that animates a ball shot from the current robot/shooter state to the hub */
@@ -82,6 +121,11 @@ public class BallVisualizer {
                       && DriverStation.getAlliance().get() == Alliance.Red;
               target =
                   isRed ? FieldConstants.Hub.oppTopCenterPoint : FieldConstants.Hub.topCenterPoint;
+
+              // decrement ball count
+              if (ballCount > 0) {
+                ballCount--;
+              }
 
               // add tracer for the full trajectory arc
               ShotTracer.addTracer(launchPosition, target);
@@ -127,7 +171,8 @@ public class BallVisualizer {
       ballPositions.add(new Pose3d(x, y, zLinear + zArc, new Rotation3d()));
     }
 
-    Logger.recordOutput("BallVisualizer", ballPositions.toArray(new Pose3d[0]));
+    Logger.recordOutput("BallVisualizer/ShotBalls", ballPositions.toArray(new Pose3d[0]));
+    Logger.recordOutput("BallVisualizer/BallCount", ballCount);
   }
 
   private static double lerp(double a, double b, double t) {

@@ -17,8 +17,8 @@ public class Hood extends FullSubsystem {
   public static final double maxAngleRad = Units.degreesToRadians(60.0);
 
   // tunable gains
-  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Hood/kP", 0.0);
-  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Hood/kD", 0.0);
+  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Hood/kP", 50.0);
+  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Hood/kD", 1.0);
   private static final LoggedTunableNumber toleranceDeg =
       new LoggedTunableNumber("Hood/toleranceDeg", 1.0);
 
@@ -92,6 +92,11 @@ public class Hood extends FullSubsystem {
   public Command runFixedCommand(double angleRad, double velocityRadsPerSec) {
     return Commands.runOnce(() -> setGoal(angleRad, velocityRadsPerSec), this)
         .andThen(Commands.idle(this));
+  }
+
+  /** command to hold the hood at its current position (use as default command) */
+  public Command holdCommand() {
+    return Commands.run(() -> setGoal(getPosition(), 0.0), this).withName("HoodHold");
   }
 
   /** command to zero the hood at the minimum angle */

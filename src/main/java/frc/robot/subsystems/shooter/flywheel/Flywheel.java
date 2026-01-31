@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.FullSubsystem;
 import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -24,6 +25,7 @@ public class Flywheel extends FullSubsystem {
 
   private double goalVelocityRadPerSec = 0.0;
   private int shotCount = 0;
+  private int prevShotCount = 0;
 
   private final Debouncer torqueCurrentDebouncer;
   private final Debouncer atGoalDebouncer;
@@ -110,6 +112,16 @@ public class Flywheel extends FullSubsystem {
   @AutoLogOutput(key = "Flywheel/shotCount")
   public int getShotCount() {
     return shotCount;
+  }
+
+  /** returns a trigger that fires once per detected shot (rising edge on shotCount increment) */
+  public Trigger shotDetectedTrigger() {
+    return new Trigger(
+        () -> {
+          boolean fired = shotCount > prevShotCount;
+          prevShotCount = shotCount;
+          return fired;
+        });
   }
 
   /** command to run the flywheel at a fixed velocity in rad/s */

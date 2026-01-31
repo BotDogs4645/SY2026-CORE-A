@@ -109,11 +109,13 @@ public class Robot extends LoggedRobot {
     robotContainer
         .getShooterMechanism()
         .update(
+            robotContainer.getDrivePose(),
             robotContainer.getTurret().getPosition(),
             robotContainer.getHood().getPosition(),
             robotContainer.getFlywheel().getVelocity(),
             robotContainer.getFlywheel().atGoal());
     BallVisualizer.periodic();
+    BallVisualizer.showHeldBall();
     ShotTracer.periodic();
 
     if (DriverStation.isEnabled()) {
