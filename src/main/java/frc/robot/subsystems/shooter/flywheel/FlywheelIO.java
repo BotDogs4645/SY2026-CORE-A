@@ -28,4 +28,7 @@ public interface FlywheelIO {
   default void updateInputs(FlywheelIOInputs inputs) {}
 
   default void applyOutputs(FlywheelIOOutputs outputs) {}
+
+  /** simulate a ball exiting the flywheel */
+  default void simulateShotDisturbance() {}
 }

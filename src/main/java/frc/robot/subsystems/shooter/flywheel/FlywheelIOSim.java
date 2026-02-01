@@ -59,4 +59,11 @@ public class FlywheelIOSim implements FlywheelIO {
 
     sim.setInputVoltage(appliedVolts);
   }
+
+  @Override
+  public void simulateShotDisturbance() {
+    // simulate energy transfer to a ball exiting the flywheel
+    // drop velocity enough to trip the shot detection threshold (>10 rad/s)
+    sim.setState(sim.getAngularPositionRad(), sim.getAngularVelocityRadPerSec() - 30.0);
+  }
 }

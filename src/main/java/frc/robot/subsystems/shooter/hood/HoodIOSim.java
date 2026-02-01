@@ -10,6 +10,7 @@ import frc.robot.subsystems.shooter.ShooterConstants;
 
 public class HoodIOSim implements HoodIO {
   private static final DCMotor MOTOR = DCMotor.getKrakenX60Foc(1);
+  private static final int SIM_SUBSTEPS = 20; // ~1kHz to match TalonFX PID rate
 
   private final SingleJointedArmSim sim;
   private double appliedVolts = 0.0;
@@ -30,8 +31,7 @@ public class HoodIOSim implements HoodIO {
 
   @Override
   public void updateInputs(HoodIOInputs inputs) {
-    sim.update(Constants.loopPeriodSecs);
-
+    // sim is advanced in applyOutputs via substeps
     inputs.motorConnected = true;
     inputs.positionRads = sim.getAngleRads();
     inputs.velocityRadsPerSec = sim.getVelocityRadPerSec();
@@ -46,22 +46,29 @@ public class HoodIOSim implements HoodIO {
     switch (outputs.mode) {
       case BRAKE, COAST -> {
         appliedVolts = 0.0;
+        sim.setInputVoltage(0.0);
+        sim.update(Constants.loopPeriodSecs);
       }
       case CLOSED_LOOP -> {
-        // errors in rotations to match TalonFX PositionTorqueCurrentFOC units
-        double positionError = Units.radiansToRotations(outputs.positionRad - sim.getAngleRads());
-        double velocityError =
-            Units.radiansToRotations(outputs.velocityRadsPerSec - sim.getVelocityRadPerSec());
-        double torqueCurrent = outputs.kP * positionError + outputs.kD * velocityError;
+        // substep the PD controller to approximate TalonFX's ~1kHz position PID loop
+        double subDt = Constants.loopPeriodSecs / SIM_SUBSTEPS;
+        for (int i = 0; i < SIM_SUBSTEPS; i++) {
+          double positionError = Units.radiansToRotations(outputs.positionRad - sim.getAngleRads());
+          double velocityError =
+              Units.radiansToRotations(outputs.velocityRadsPerSec - sim.getVelocityRadPerSec());
+          double torqueCurrent = outputs.kP * positionError + outputs.kD * velocityError;
 
-        // convert torque current to voltage: V = I*R + omega_motor/Kv
-        double motorVelocityRadPerSec = sim.getVelocityRadPerSec() * ShooterConstants.hoodGearRatio;
-        appliedVolts =
-            torqueCurrent * MOTOR.rOhms + motorVelocityRadPerSec / MOTOR.KvRadPerSecPerVolt;
-        appliedVolts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
+          // V = I*R + omega_motor/Kv to produce the commanded torque current
+          double motorVelocityRadPerSec =
+              sim.getVelocityRadPerSec() * ShooterConstants.hoodGearRatio;
+          appliedVolts =
+              torqueCurrent * MOTOR.rOhms + motorVelocityRadPerSec / MOTOR.KvRadPerSecPerVolt;
+          appliedVolts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
+
+          sim.setInputVoltage(appliedVolts);
+          sim.update(subDt);
+        }
       }
     }
-
-    sim.setInputVoltage(appliedVolts);
   }
 }

@@ -8,7 +8,7 @@ public class ShooterConstants {
 
   // TODO: gear ratios
   public static final double turretGearRatio = 16.5;
-  public static final double hoodGearRatio = 1.0;
+  public static final double hoodGearRatio = 50.0;
   public static final double flywheelGearRatio = 1.0;
 
   // TODO: physical offsets

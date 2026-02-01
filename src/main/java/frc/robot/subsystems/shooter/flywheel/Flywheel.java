@@ -23,9 +23,13 @@ public class Flywheel extends FullSubsystem {
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
   private final FlywheelIO.FlywheelIOOutputs outputs = new FlywheelIO.FlywheelIOOutputs();
 
+  // sim shot interval: ~5 balls/sec
+  private static final int SIM_SHOT_INTERVAL_CYCLES = 10;
+
   private double goalVelocityRadPerSec = 0.0;
   private int shotCount = 0;
   private int prevShotCount = 0;
+  private int simShotCycleCounter = 0;
 
   private final Debouncer torqueCurrentDebouncer;
   private final Debouncer atGoalDebouncer;
@@ -67,9 +71,16 @@ public class Flywheel extends FullSubsystem {
           // shot detection based off velocity drop
           inTorqueCurrentControl = false;
           shotCount++;
+          simShotCycleCounter = 0;
           outputs.mode = FlywheelIO.FlywheelIOOutputMode.DUTY_CYCLE_BANG_BANG;
         } else {
           outputs.mode = FlywheelIO.FlywheelIOOutputMode.TORQUE_CURRENT_BANG_BANG;
+          // only for sim: inject velocity disturbance to simulate ball exits
+          simShotCycleCounter++;
+          if (simShotCycleCounter >= SIM_SHOT_INTERVAL_CYCLES) {
+            io.simulateShotDisturbance();
+            simShotCycleCounter = 0;
+          }
         }
       } else {
         if (closeToTarget) {
@@ -88,10 +99,13 @@ public class Flywheel extends FullSubsystem {
 
   /** sets the flywheel goal velocity and begins spin-up */
   public void setGoal(double velocityRadPerSec) {
+    // only reset state machine when goal changes significantly,
+    if (Math.abs(velocityRadPerSec - goalVelocityRadPerSec) > torqueCurrentControlTolerance.get()) {
+      inTorqueCurrentControl = false;
+      torqueCurrentDebouncer.calculate(false);
+      outputs.mode = FlywheelIO.FlywheelIOOutputMode.DUTY_CYCLE_BANG_BANG;
+    }
     goalVelocityRadPerSec = velocityRadPerSec;
-    inTorqueCurrentControl = false;
-    torqueCurrentDebouncer.calculate(false);
-    outputs.mode = FlywheelIO.FlywheelIOOutputMode.DUTY_CYCLE_BANG_BANG;
   }
 
   /** returns true if the flywheel is at its goal velocity (debounced!) */
