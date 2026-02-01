@@ -20,7 +20,7 @@ public class Hood extends FullSubsystem {
   private static final LoggedTunableNumber kP = new LoggedTunableNumber("Hood/kP", 50.0);
   private static final LoggedTunableNumber kD = new LoggedTunableNumber("Hood/kD", 1.0);
   private static final LoggedTunableNumber toleranceDeg =
-      new LoggedTunableNumber("Hood/toleranceDeg", 1.0);
+      new LoggedTunableNumber("Hood/toleranceDeg", 3.0);
 
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();

@@ -291,6 +291,7 @@ public class RobotContainer {
     // right trigger: fire (flywheel at calculated speed, or fallback)
     driver
         .rightTrigger()
+        .and(() -> BallVisualizer.getBallCount() > 0)
         .whileTrue(
             Commands.run(
                     () -> {

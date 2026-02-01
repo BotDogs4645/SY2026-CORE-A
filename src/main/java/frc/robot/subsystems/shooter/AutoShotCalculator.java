@@ -10,10 +10,9 @@ import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Gemini is the physics genius... we will see how this works -CR
- * Stateless auto-shot calculator that models projectile motion with gravity and air drag,
- * compensates for robot velocity, and iteratively solves for turret yaw, hood pitch, and flywheel
- * speed.
+ * Gemini is the physics genius... we will see how this works -CR Stateless auto-shot calculator
+ * that models projectile motion with gravity and air drag, compensates for robot velocity, and
+ * iteratively solves for turret yaw, hood pitch, and flywheel speed.
  */
 public class AutoShotCalculator {
 

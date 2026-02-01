@@ -28,6 +28,9 @@ public class BallVisualizer {
   private static final List<ShotAnimation> activeShots = new ArrayList<>();
   private static int ballCount = 8;
 
+  private static final LoggedTunableNumber ballCountOverride =
+      new LoggedTunableNumber("BallVisualizer/ballCountOverride", 8);
+
   private BallVisualizer() {}
 
   /** sets the robot pose supplier for computing launch positions */
@@ -122,10 +125,13 @@ public class BallVisualizer {
               target =
                   isRed ? FieldConstants.Hub.oppTopCenterPoint : FieldConstants.Hub.topCenterPoint;
 
-              // decrement ball count
-              if (ballCount > 0) {
-                ballCount--;
+              // skip if no balls remain
+              if (ballCount <= 0) {
+                return Commands.none();
               }
+
+              // decrement ball count
+              ballCount--;
 
               // add tracer for the full trajectory arc
               ShotTracer.addTracer(launchPosition, target);
@@ -145,6 +151,11 @@ public class BallVisualizer {
 
   /** logs all active ball positions */
   public static void periodic() {
+    // allow dashboard override of ball count for testing
+    if (ballCountOverride.hasChanged(BallVisualizer.class.hashCode())) {
+      ballCount = (int) ballCountOverride.get();
+    }
+
     double now = Timer.getFPGATimestamp();
     Iterator<ShotAnimation> it = activeShots.iterator();
     List<Pose3d> ballPositions = new ArrayList<>();
