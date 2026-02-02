@@ -33,16 +33,18 @@ public class Turret extends SubsystemBase {
   /** Creates a new Turret. */
   public Turret() {
     turretRotationMotor = new TalonFX(Constants.TurretConstants.ROTATION_MOTOR_ID, "CANivore");
+    turretRotationMotor.setPosition(0);
 
     Slot0Configs configs =
         new Slot0Configs()
             .withKP(Constants.TurretConstants.ROTATION_kP)
             .withKI(Constants.TurretConstants.ROTATION_kI)
-            .withKD(Constants.TurretConstants.ROTATION_kD);
+            .withKD(Constants.TurretConstants.ROTATION_kD)
+            .withKA(0.001);
     turretRotationMotor.getConfigurator().apply(configs);
 
     FeedbackConfigs feedbackConfigs = new FeedbackConfigs();
-    feedbackConfigs.SensorToMechanismRatio = Constants.TurretConstants.ROTATION_GEAR_RATIO;
+    feedbackConfigs.SensorToMechanismRatio = 1;
     turretRotationMotor.getConfigurator().apply(feedbackConfigs);
 
     var talonFXSim = turretRotationMotor.getSimState();

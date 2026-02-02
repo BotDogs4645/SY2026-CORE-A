@@ -4,15 +4,13 @@
 
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Rotations;
-
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
@@ -35,39 +33,15 @@ public class KeepTurretAlignedToHub extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    Pose2d drivePose = drive.getPose();
-    Translation2d hubLocation = new Translation2d(4.634, 4.003);
-    Translation2d vectorToHub = hubLocation.minus(drivePose.getTranslation());
-
-    Logger.recordOutput("Turret/vectorToHub", vectorToHub);
-
-    Rotation2d rotationToHub = new Rotation2d(vectorToHub.getX(), vectorToHub.getY());
-    Logger.recordOutput("Turret/rotationToHub", rotationToHub.getDegrees());
-    controlRequest =
-        new PositionDutyCycle(Angle.ofBaseUnits(rotationToHub.getRotations(), Rotations));
-
+    controlRequest = new PositionDutyCycle(getAlignmentMotorPosition());
     turret.setControl(controlRequest);
-
-    Logger.recordOutput("Turret/rotationToHub", rotationToHub.getDegrees());
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    Pose2d drivePose = drive.getPose();
-    Translation2d hubLocation = new Translation2d(4.634, 4.003);
-    Translation2d vectorToHub = hubLocation.minus(drivePose.getTranslation());
-
-    Logger.recordOutput("Turret/vectorToHub", vectorToHub);
-
-    Rotation2d rotationToHub = new Rotation2d(vectorToHub.getX(), vectorToHub.getY());
-    Logger.recordOutput("Turret/rotationToHub", rotationToHub.getDegrees());
-
-    turret.setControl(
-        controlRequest.withPosition(Angle.ofBaseUnits(rotationToHub.getRotations(), Rotations)));
-    Logger.recordOutput("Turrent/targetPosition", controlRequest.Position);
-
-    Logger.recordOutput("Turret/rotationToHub", rotationToHub.getDegrees());
+    turret.setControl(controlRequest.withPosition(getAlignmentMotorPosition()));
+    Logger.recordOutput("Turret/targetPosition", controlRequest.Position);
   }
 
   // Called once the command ends or is interrupted.
@@ -80,5 +54,14 @@ public class KeepTurretAlignedToHub extends Command {
   @Override
   public boolean isFinished() {
     return false;
+  }
+
+  public double getAlignmentMotorPosition() {
+    Pose2d drivePose = drive.getPose();
+    Translation2d hubLocation = new Translation2d(4.634, 4.003);
+    Translation2d vectorToHub = hubLocation.minus(drivePose.getTranslation());
+    Rotation2d rotationToHub = new Rotation2d(vectorToHub.getX(), vectorToHub.getY());
+    Logger.recordOutput("Turret/rotationsToHub", rotationToHub.getRotations());
+    return rotationToHub.getRotations() * Constants.TurretConstants.ROTATION_GEAR_RATIO;
   }
 }
