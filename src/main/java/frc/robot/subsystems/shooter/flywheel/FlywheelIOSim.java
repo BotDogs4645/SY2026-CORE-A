@@ -1,7 +1,9 @@
 package frc.robot.subsystems.shooter.flywheel;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
 import frc.robot.subsystems.shooter.ShooterConstants;
@@ -34,27 +36,19 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void applyOutputs(FlywheelIOOutputs outputs) {
-    switch (outputs.mode) {
-      case COAST -> {
-        appliedVolts = 0.0;
-      }
-      case DUTY_CYCLE_BANG_BANG -> {
-        // full voltage when below target and zero when above
-        if (sim.getAngularVelocityRadPerSec() < outputs.velocityRadsPerSec) {
-          appliedVolts = 12.0;
-        } else {
-          appliedVolts = 0.0;
-        }
-      }
-      case TORQUE_CURRENT_BANG_BANG -> {
-        // full voltage when below target and zero when above (as close as the sim can get to torque
-        // current)
-        if (sim.getAngularVelocityRadPerSec() < outputs.velocityRadsPerSec) {
-          appliedVolts = 12.0;
-        } else {
-          appliedVolts = 0.0;
-        }
-      }
+    if (outputs.mode == FlywheelIOOutputMode.COAST) {
+      appliedVolts = 0.0;
+    } else if (outputs.mode == FlywheelIOOutputMode.CLOSED_LOOP) {
+      double currentRotPerSec = Units.radiansToRotations(sim.getAngularVelocityRadPerSec());
+      double targetRotPerSec = Units.radiansToRotations(outputs.velocityRadsPerSec);
+
+      double ffVolts = targetRotPerSec * outputs.kV;
+
+      double errorRotPerSec = targetRotPerSec - currentRotPerSec;
+      double pidVolts = errorRotPerSec * outputs.kP;
+
+      appliedVolts = ffVolts + pidVolts;
+      appliedVolts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
     }
 
     sim.setInputVoltage(appliedVolts);
@@ -62,8 +56,7 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void simulateShotDisturbance() {
-    // simulate energy transfer to a ball exiting the flywheel
-    // drop velocity enough to trip the shot detection threshold (>10 rad/s)
+
     sim.setState(sim.getAngularPositionRad(), sim.getAngularVelocityRadPerSec() - 30.0);
   }
 }

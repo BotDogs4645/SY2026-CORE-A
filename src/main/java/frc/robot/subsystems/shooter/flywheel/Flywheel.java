@@ -8,40 +8,43 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.FullSubsystem;
 import frc.robot.util.LoggedTunableNumber;
+import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends FullSubsystem {
-  private static final LoggedTunableNumber torqueCurrentControlTolerance =
-      new LoggedTunableNumber("Flywheel/torqueCurrentControlToleranceRadPerSec", 10.0);
-  private static final LoggedTunableNumber torqueCurrentControlDebounceSecs =
-      new LoggedTunableNumber("Flywheel/torqueCurrentControlDebounceSecs", 0.1);
+  private static final LoggedTunableNumber kV = new LoggedTunableNumber("Flywheel/kV", 0.12);
+  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Flywheel/kP", 0.05);
+
+  private static final LoggedTunableNumber shotDetectionTolerance =
+      new LoggedTunableNumber("Flywheel/shotDetectionToleranceRadPerSec", 20.0);
+  private static final LoggedTunableNumber atGoalTolerance =
+      new LoggedTunableNumber("Flywheel/atGoalToleranceRadPerSec", 10.0);
   private static final LoggedTunableNumber atGoalDebounceSecs =
-      new LoggedTunableNumber("Flywheel/atGoalDebounceSecs", 0.5);
+      new LoggedTunableNumber("Flywheel/atGoalDebounceSecs", 0.2);
 
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
   private final FlywheelIO.FlywheelIOOutputs outputs = new FlywheelIO.FlywheelIOOutputs();
 
-  // sim shot interval: ~5 balls/sec
-  private static final int SIM_SHOT_INTERVAL_CYCLES = 10;
-
-  private double goalVelocityRadPerSec = 0.0;
-  private int shotCount = 0;
-  private int prevShotCount = 0;
+  // sim shot injection
+  private static final int SIM_SHOT_INTERVAL_CYCLES = 60; // ~1 se between shots
   private int simShotCycleCounter = 0;
 
-  private final Debouncer torqueCurrentDebouncer;
+  private double goalVelocityRadPerSec = 0.0;
+  /** -- GETTER -- returns the number of detected shots */
+  @Getter private int shotCount = 0;
+
+  private int prevShotCount = 0;
+  private boolean isAtSpeed = false;
+
   private final Debouncer atGoalDebouncer;
-  private boolean inTorqueCurrentControl = false;
 
   private final Alert disconnectedAlert =
       new Alert("Flywheel motor disconnected!", AlertType.kWarning);
 
   public Flywheel(FlywheelIO io) {
     this.io = io;
-    torqueCurrentDebouncer =
-        new Debouncer(torqueCurrentControlDebounceSecs.get(), Debouncer.DebounceType.kRising);
     atGoalDebouncer = new Debouncer(atGoalDebounceSecs.get(), Debouncer.DebounceType.kRising);
   }
 
@@ -54,44 +57,48 @@ public class Flywheel extends FullSubsystem {
 
     Logger.recordOutput("Flywheel/goalVelocityRadPerSec", goalVelocityRadPerSec);
     Logger.recordOutput("Flywheel/shotCount", shotCount);
-    Logger.recordOutput("Flywheel/inTorqueCurrentControl", inTorqueCurrentControl);
   }
 
   @Override
   public void periodicAfterScheduler() {
-    if (outputs.mode != FlywheelIO.FlywheelIOOutputMode.COAST) {
-      double error = Math.abs(goalVelocityRadPerSec - inputs.velocityRadsPerSec);
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        () -> new Debouncer(atGoalDebounceSecs.get(), Debouncer.DebounceType.kRising),
+        atGoalDebounceSecs);
 
-      // are we close enough to target for torque current mode transition>?
-      boolean closeToTarget =
-          torqueCurrentDebouncer.calculate(error < torqueCurrentControlTolerance.get());
+    if (goalVelocityRadPerSec == 0.0) {
+      outputs.mode = FlywheelIO.FlywheelIOOutputMode.COAST;
+      outputs.velocityRadsPerSec = 0.0;
+      isAtSpeed = false;
+    } else {
+      outputs.mode = FlywheelIO.FlywheelIOOutputMode.CLOSED_LOOP;
+      outputs.velocityRadsPerSec = goalVelocityRadPerSec;
 
-      if (inTorqueCurrentControl) {
-        if (!closeToTarget) {
-          // shot detection based off velocity drop
-          inTorqueCurrentControl = false;
+      outputs.kV = kV.get();
+      outputs.kP = kP.get();
+
+      // shot detection logic
+      double error = goalVelocityRadPerSec - inputs.velocityRadsPerSec;
+
+      if (isAtSpeed) {
+        // we were at speed, did we drop velocity suddenly?
+        if (error > shotDetectionTolerance.get()) {
           shotCount++;
-          simShotCycleCounter = 0;
-          outputs.mode = FlywheelIO.FlywheelIOOutputMode.DUTY_CYCLE_BANG_BANG;
-        } else {
-          outputs.mode = FlywheelIO.FlywheelIOOutputMode.TORQUE_CURRENT_BANG_BANG;
-          // only for sim: inject velocity disturbance to simulate ball exits
-          simShotCycleCounter++;
-          if (simShotCycleCounter >= SIM_SHOT_INTERVAL_CYCLES) {
-            io.simulateShotDisturbance();
-            simShotCycleCounter = 0;
-          }
+          isAtSpeed = false;
         }
       } else {
-        if (closeToTarget) {
-          inTorqueCurrentControl = true;
-          outputs.mode = FlywheelIO.FlywheelIOOutputMode.TORQUE_CURRENT_BANG_BANG;
-        } else {
-          outputs.mode = FlywheelIO.FlywheelIOOutputMode.DUTY_CYCLE_BANG_BANG;
+        // we are recovering or spinning up
+        if (Math.abs(error) < atGoalTolerance.get()) {
+          isAtSpeed = true;
         }
       }
 
-      outputs.velocityRadsPerSec = goalVelocityRadPerSec;
+      // sim only
+      simShotCycleCounter++;
+      if (simShotCycleCounter >= SIM_SHOT_INTERVAL_CYCLES && isAtSpeed) {
+        io.simulateShotDisturbance();
+        simShotCycleCounter = 0;
+      }
     }
 
     io.applyOutputs(outputs);
@@ -99,12 +106,6 @@ public class Flywheel extends FullSubsystem {
 
   /** sets the flywheel goal velocity and begins spin-up */
   public void setGoal(double velocityRadPerSec) {
-    // only reset state machine when goal changes significantly,
-    if (Math.abs(velocityRadPerSec - goalVelocityRadPerSec) > torqueCurrentControlTolerance.get()) {
-      inTorqueCurrentControl = false;
-      torqueCurrentDebouncer.calculate(false);
-      outputs.mode = FlywheelIO.FlywheelIOOutputMode.DUTY_CYCLE_BANG_BANG;
-    }
     goalVelocityRadPerSec = velocityRadPerSec;
   }
 
@@ -113,8 +114,7 @@ public class Flywheel extends FullSubsystem {
   public boolean atGoal() {
     if (goalVelocityRadPerSec == 0.0) return false;
     return atGoalDebouncer.calculate(
-        Math.abs(inputs.velocityRadsPerSec - goalVelocityRadPerSec)
-            < torqueCurrentControlTolerance.get());
+        Math.abs(inputs.velocityRadsPerSec - goalVelocityRadPerSec) < atGoalTolerance.get());
   }
 
   /** returns the current flywheel velocity in rad/s */
@@ -122,13 +122,7 @@ public class Flywheel extends FullSubsystem {
     return inputs.velocityRadsPerSec;
   }
 
-  /** returns the number of detected shots */
-  @AutoLogOutput(key = "Flywheel/shotCount")
-  public int getShotCount() {
-    return shotCount;
-  }
-
-  /** returns a trigger that fires once per detected shot (rising edge on shotCount increment) */
+  /** returns a trigger that fires once per detected shot */
   public Trigger shotDetectedTrigger() {
     return new Trigger(
         () -> {
@@ -147,9 +141,7 @@ public class Flywheel extends FullSubsystem {
   public Command stopCommand() {
     return Commands.runOnce(
         () -> {
-          goalVelocityRadPerSec = 0.0;
-          inTorqueCurrentControl = false;
-          outputs.mode = FlywheelIO.FlywheelIOOutputMode.COAST;
+          setGoal(0.0);
         },
         this);
   }

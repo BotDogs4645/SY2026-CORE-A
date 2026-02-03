@@ -16,13 +16,16 @@ public interface FlywheelIO {
 
   enum FlywheelIOOutputMode {
     COAST,
-    DUTY_CYCLE_BANG_BANG, // BANNNNNGGGG GREEEENNN FN
-    TORQUE_CURRENT_BANG_BANG
+    CLOSED_LOOP // no more bang bang green fn :(
   }
 
   class FlywheelIOOutputs {
     public FlywheelIOOutputMode mode = FlywheelIOOutputMode.COAST;
     public double velocityRadsPerSec = 0.0;
+    public double kP = 0.0;
+    public double kI = 0.0;
+    public double kD = 0.0;
+    public double kV = 0.0;
   }
 
   default void updateInputs(FlywheelIOInputs inputs) {}

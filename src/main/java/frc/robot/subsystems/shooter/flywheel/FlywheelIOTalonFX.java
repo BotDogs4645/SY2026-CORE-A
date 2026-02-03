@@ -4,10 +4,10 @@ import static frc.robot.util.PhoenixUtil.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -21,8 +21,6 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.shooter.ShooterConstants;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
-  private static final double MAX_TORQUE_CURRENT_AMPS = 40.0;
-
   private final TalonFX talon;
 
   private final StatusSignal<Angle> position;
@@ -35,8 +33,11 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
   private final CoastOut coastRequest = new CoastOut();
-  private final DutyCycleOut dutyCycleWant = new DutyCycleOut(0.0);
-  private final TorqueCurrentFOC torqueCurrentWant = new TorqueCurrentFOC(0.0);
+
+  private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
+
+  private double lastkV = -1;
+  private double lastkP = -1;
 
   public FlywheelIOTalonFX() {
     talon = new TalonFX(ShooterConstants.flywheelMotorId);
@@ -75,20 +76,22 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void applyOutputs(FlywheelIOOutputs outputs) {
-    double currentVelocityRotPerSec = Units.radiansToRotations(velocity.getValueAsDouble());
-    double targetVelocityRotPerSec = Units.radiansToRotations(outputs.velocityRadsPerSec);
-    boolean belowTarget = currentVelocityRotPerSec < targetVelocityRotPerSec;
+    if (outputs.mode == FlywheelIOOutputMode.COAST) {
+      talon.setControl(coastRequest);
+    } else {
+      if (outputs.kV != lastkV || outputs.kP != lastkP) {
+        var slot0 = new Slot0Configs();
+        slot0.kP = outputs.kP;
+        slot0.kV = outputs.kV;
+        talon.getConfigurator().apply(slot0);
+        lastkV = outputs.kV;
+        lastkP = outputs.kP;
+      }
 
-    switch (outputs.mode) {
-      case COAST -> talon.setControl(coastRequest);
-      case DUTY_CYCLE_BANG_BANG -> {
-        // full duty cycle when below target and zero when above
-        talon.setControl(dutyCycleWant.withOutput(belowTarget ? 1.0 : 0.0));
-      }
-      case TORQUE_CURRENT_BANG_BANG -> {
-        // max torque current when below target and zero when above
-        talon.setControl(torqueCurrentWant.withOutput(belowTarget ? MAX_TORQUE_CURRENT_AMPS : 0.0));
-      }
+      double targetRotPerSec = Units.radiansToRotations(outputs.velocityRadsPerSec);
+
+      talon.setControl(
+          velocityRequest.withVelocity(targetRotPerSec).withSlot(0).withEnableFOC(true));
     }
   }
 }
