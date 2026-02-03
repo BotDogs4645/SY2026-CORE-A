@@ -66,4 +66,12 @@ public final class Constants {
     SPIKE_GRIP, // Spike Grip wheels
     BILLET // Billet wheels
   }
+
+  public class TurretConstants {
+    public static final int ROTATION_MOTOR_ID = 20;
+    public static final double ROTATION_GEAR_RATIO = 16.5;
+    public static final double ROTATION_kP = 0.5;
+    public static final double ROTATION_kI = 0;
+    public static final double ROTATION_kD = 0;
+  }
 }
