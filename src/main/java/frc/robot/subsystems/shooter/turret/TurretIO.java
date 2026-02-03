@@ -25,6 +25,8 @@ public interface TurretIO {
     public double velocity = 0.0;
     public double kP = 0.0;
     public double kD = 0.0;
+    public double kS = 0.0;
+    public double kV = 0.0;
   }
 
   default void updateInputs(TurretIOInputs inputs) {}

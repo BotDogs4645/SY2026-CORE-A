@@ -1,11 +1,13 @@
 package frc.robot.subsystems.shooter.hood;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
 import frc.robot.util.FullSubsystem;
 import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -17,14 +19,22 @@ public class Hood extends FullSubsystem {
   public static final double maxAngleRad = Units.degreesToRadians(60.0);
 
   // tunable gains
-  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Hood/kP", 50.0);
-  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Hood/kD", 1.0);
+  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Hood/kP", 40.0);
+  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Hood/kD", 0.5);
+  private static final LoggedTunableNumber kG = new LoggedTunableNumber("Hood/kG", 0.5);
+  private static final LoggedTunableNumber kS = new LoggedTunableNumber("Hood/kS", 0.2);
+  private static final LoggedTunableNumber kV = new LoggedTunableNumber("Hood/kV", 0.1);
   private static final LoggedTunableNumber toleranceDeg =
       new LoggedTunableNumber("Hood/toleranceDeg", 3.0);
 
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
   private final HoodIO.HoodIOOutputs outputs = new HoodIO.HoodIOOutputs();
+
+  private final TrapezoidProfile profile =
+      new TrapezoidProfile(new TrapezoidProfile.Constraints(2 * 2 * Math.PI, 8 * 2 * Math.PI));
+  private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
+  private TrapezoidProfile.State goal = new TrapezoidProfile.State();
 
   private double goalPositionRad = 0.0;
   private double goalVelocityRadsPerSec = 0.0;
@@ -51,12 +61,18 @@ public class Hood extends FullSubsystem {
   public void periodicAfterScheduler() {
     if (outputs.mode == HoodIO.HoodIOOutputMode.CLOSED_LOOP) {
       // clamp goal to legal range
-      double clampedGoal = MathUtil.clamp(goalPositionRad, minAngleRad, maxAngleRad);
+      goal =
+          new TrapezoidProfile.State(MathUtil.clamp(goalPositionRad, minAngleRad, maxAngleRad), 0);
+      setpoint = profile.calculate(Constants.loopPeriodSecs, setpoint, goal);
 
-      outputs.positionRad = clampedGoal - positionOffset;
-      outputs.velocityRadsPerSec = goalVelocityRadsPerSec;
+      outputs.positionRad = setpoint.position - positionOffset;
+      outputs.velocityRadsPerSec = setpoint.velocity;
+
       outputs.kP = kP.get();
       outputs.kD = kD.get();
+      outputs.kG = kG.get();
+      outputs.kS = kS.get();
+      outputs.kV = kV.get();
     }
 
     io.applyOutputs(outputs);
@@ -77,8 +93,7 @@ public class Hood extends FullSubsystem {
 
   /** sets the goal angle and velocit */
   public void setGoal(double angleRad, double velocityRadsPerSec) {
-    goalPositionRad = MathUtil.clamp(angleRad, minAngleRad, maxAngleRad);
-    goalVelocityRadsPerSec = velocityRadsPerSec;
+    goalPositionRad = angleRad;
     outputs.mode = HoodIO.HoodIOOutputMode.CLOSED_LOOP;
   }
 

@@ -27,6 +27,8 @@ public class Turret extends FullSubsystem {
   // tunable gains
   private static final LoggedTunableNumber kP = new LoggedTunableNumber("Turret/kP", 50.0);
   private static final LoggedTunableNumber kD = new LoggedTunableNumber("Turret/kD", 1.0);
+  private static final LoggedTunableNumber kS = new LoggedTunableNumber("Turret/kS", 0.0);
+  private static final LoggedTunableNumber kV = new LoggedTunableNumber("Turret/kV", 0.12);
   private static final LoggedTunableNumber maxVelocity =
       new LoggedTunableNumber("Turret/maxVelocityRadPerSec", 2.0 * Math.PI);
   private static final LoggedTunableNumber maxAcceleration =
@@ -87,6 +89,8 @@ public class Turret extends FullSubsystem {
       outputs.velocity = setpoint.velocity;
       outputs.kP = kP.get();
       outputs.kD = kD.get();
+      outputs.kS = kS.get();
+      outputs.kV = kV.get();
     }
 
     io.applyOutputs(outputs);

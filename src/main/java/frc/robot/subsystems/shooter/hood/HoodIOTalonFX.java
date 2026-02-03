@@ -10,6 +10,7 @@ import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.filter.Debouncer;
@@ -39,6 +40,8 @@ public class HoodIOTalonFX implements HoodIO {
 
   private double lastKP = Double.NaN;
   private double lastKD = Double.NaN;
+  private double lastKG = Double.NaN;
+  private double lastKS = Double.NaN;
 
   public HoodIOTalonFX() {
     talon = new TalonFX(ShooterConstants.hoodMotorId);
@@ -83,12 +86,19 @@ public class HoodIOTalonFX implements HoodIO {
       case COAST -> talon.setControl(coastRequest);
       case CLOSED_LOOP -> {
         // only if changed
-        if (outputs.kP != lastKP || outputs.kD != lastKD) {
-          lastKP = outputs.kP;
-          lastKD = outputs.kD;
+        if (outputs.kP != lastKP
+            || outputs.kD != lastKD
+            || outputs.kG != lastKG
+            || outputs.kS != lastKS) {
+
           var slot0 = new Slot0Configs();
           slot0.kP = outputs.kP;
           slot0.kD = outputs.kD;
+          slot0.kS = outputs.kS;
+
+          slot0.kG = outputs.kG;
+          slot0.GravityType = GravityTypeValue.Arm_Cosine;
+
           talon.getConfigurator().apply(slot0);
         }
 
@@ -96,8 +106,8 @@ public class HoodIOTalonFX implements HoodIO {
         double velocityRotPerSec = Units.radiansToRotations(outputs.velocityRadsPerSec);
         talon.setControl(
             positionRequest
-                .withPosition(positionRotations)
-                .withVelocity(velocityRotPerSec)
+                .withPosition(Units.radiansToRotations(outputs.positionRad))
+                .withVelocity(Units.radiansToRotations(outputs.velocityRadsPerSec))
                 .withSlot(0));
       }
     }

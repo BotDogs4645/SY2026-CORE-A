@@ -8,7 +8,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -34,10 +34,12 @@ public class TurretIOTalonFX implements TurretIO {
 
   private final NeutralOut neutralRequest = new NeutralOut();
   private final CoastOut coastRequest = new CoastOut();
-  private final PositionTorqueCurrentFOC positionRequest = new PositionTorqueCurrentFOC(0.0);
+  private final PositionVoltage positionRequest = new PositionVoltage(0.0);
 
   private double lastKP = Double.NaN;
   private double lastKD = Double.NaN;
+  private double lastKS = Double.NaN;
+  private double lastKV = Double.NaN;
 
   public TurretIOTalonFX() {
     talon = new TalonFX(ShooterConstants.turretMotorId, DriveConstants.canBus);
@@ -78,12 +80,24 @@ public class TurretIOTalonFX implements TurretIO {
       case BRAKE -> talon.setControl(neutralRequest);
       case COAST -> talon.setControl(coastRequest);
       case CLOSED_LOOP -> {
-        if (outputs.kP != lastKP || outputs.kD != lastKD) {
+        if (outputs.kP != lastKP
+            || outputs.kD != lastKD
+            || outputs.kS != lastKS
+            || outputs.kV != lastKV) {
+
           lastKP = outputs.kP;
           lastKD = outputs.kD;
+          lastKS = outputs.kS;
+          lastKV = outputs.kV;
+
           var slot0 = new Slot0Configs();
           slot0.kP = outputs.kP;
           slot0.kD = outputs.kD;
+
+          slot0.kV = outputs.kV * 2 * Math.PI;
+
+          slot0.kS = outputs.kS;
+
           talon.getConfigurator().apply(slot0);
         }
 

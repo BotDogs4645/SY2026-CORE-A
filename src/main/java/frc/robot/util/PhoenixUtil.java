@@ -9,8 +9,6 @@ public class PhoenixUtil {
     for (int i = 0; i < maxAttempts; i++) {
       var error = command.get();
       if (error.isOK()) break;
-      System.out.println("something is fucked!!!");
-      System.out.println(error);
     }
   }
 }
