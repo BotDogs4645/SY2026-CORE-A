@@ -3,12 +3,12 @@ package frc.robot.subsystems.shooter;
 public class ShooterConstants {
   // TODO: CAN IDs
   public static final int turretMotorId = 20;
-  public static final int hoodMotorId = 21;
+  public static final int hoodMotorId = 39;
   public static final int flywheelMotorId = 22;
 
   // TODO: gear ratios
   public static final double turretGearRatio = 16.5;
-  public static final double hoodGearRatio = 50.0;
+  public static final double hoodGearRatio = (50.0 / 24.0);
   public static final double flywheelGearRatio = 1.0;
 
   // TODO: physical offsets

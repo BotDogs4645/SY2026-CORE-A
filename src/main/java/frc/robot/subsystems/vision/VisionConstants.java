@@ -3,6 +3,7 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
 import frc.robot.FieldConstants;
 
 public class VisionConstants {
@@ -19,12 +20,12 @@ public class VisionConstants {
   // mode.
   // So make sure these are correct even though they aren't used at all with Limelight.
   public static final Transform3d robotToCamera0 =
-      new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0));
+      new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, Units.degreesToRadians(30), 0.0));
   public static Transform3d robotToCamera1 =
       new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI));
 
   // Basic filtering thresholds
-  public static final double maxAmbiguity = 0.3;
+  public static final double maxAmbiguity = 0.6;
   public static final double maxZError = 0.75;
 
   // Standard deviation baselines, for 1 meter distance and 1 tag

@@ -19,10 +19,10 @@ public class Hood extends FullSubsystem {
   public static final double maxAngleRad = Units.degreesToRadians(60.0);
 
   // tunable gains
-  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Hood/kP", 40.0);
-  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Hood/kD", 0.5);
-  private static final LoggedTunableNumber kG = new LoggedTunableNumber("Hood/kG", 0.5);
-  private static final LoggedTunableNumber kS = new LoggedTunableNumber("Hood/kS", 0.2);
+  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Hood/kP", 200.0);
+  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Hood/kD", 8.0);
+  private static final LoggedTunableNumber kG = new LoggedTunableNumber("Hood/kG", 4.0);
+  private static final LoggedTunableNumber kS = new LoggedTunableNumber("Hood/kS", 1.0);
   private static final LoggedTunableNumber kV = new LoggedTunableNumber("Hood/kV", 0.1);
   private static final LoggedTunableNumber toleranceDeg =
       new LoggedTunableNumber("Hood/toleranceDeg", 3.0);

@@ -25,16 +25,16 @@ public class Turret extends FullSubsystem {
   public static final double maxAngleRad = Units.degreesToRadians(177.5);
 
   // tunable gains
-  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Turret/kP", 50.0);
-  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Turret/kD", 1.0);
-  private static final LoggedTunableNumber kS = new LoggedTunableNumber("Turret/kS", 0.0);
-  private static final LoggedTunableNumber kV = new LoggedTunableNumber("Turret/kV", 0.12);
+  private static final LoggedTunableNumber kP = new LoggedTunableNumber("Turret/kP", 10.0);
+  private static final LoggedTunableNumber kD = new LoggedTunableNumber("Turret/kD", 5.0);
+  private static final LoggedTunableNumber kS = new LoggedTunableNumber("Turret/kS", 0.65);
+  private static final LoggedTunableNumber kV = new LoggedTunableNumber("Turret/kV", 0.13);
   private static final LoggedTunableNumber maxVelocity =
-      new LoggedTunableNumber("Turret/maxVelocityRadPerSec", 2.0 * Math.PI);
+      new LoggedTunableNumber("Turret/maxVelocityRadPerSec", 1 * Math.PI);
   private static final LoggedTunableNumber maxAcceleration =
-      new LoggedTunableNumber("Turret/maxAccelerationRadPerSecSq", 4.0 * Math.PI);
+      new LoggedTunableNumber("Turret/maxAccelerationRadPerSecSq", 1.5 * Math.PI);
   private static final LoggedTunableNumber toleranceDeg =
-      new LoggedTunableNumber("Turret/toleranceDeg", 1.0);
+      new LoggedTunableNumber("Turret/toleranceDeg", 3.0);
 
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
